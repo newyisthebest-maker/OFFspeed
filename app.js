@@ -95,6 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 async function initFirebaseSync() {
+  window.firebaseLoaded = false;
   const fb = window.firebaseServices;
   if (!fb?.db) {
     window.store = readJson(STORE_KEY, starterData);
@@ -129,6 +130,7 @@ async function initFirebaseSync() {
   });
 
   await loadProductsFromCloud();
+  window.firebaseLoaded = true;
   render();
 }
 
@@ -228,8 +230,8 @@ async function save() {
 
     const fb = window.firebaseServices;
 
-    // Sync to Firestore whenever Firebase is available.
-    if (fb?.db) {
+    // Prevent startup from overwriting Firestore with an empty store.
+    if (fb?.db && window.firebaseLoaded) {
       const storeSize = new Blob([JSON.stringify(window.store)]).size;
 
       if (storeSize > 900000) {
