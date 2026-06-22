@@ -108,8 +108,10 @@ async function initFirebaseSync() {
   if (!snap.exists()) {
     window.store = structuredClone(starterData);
 
-    if (fb.auth.currentUser) {
+    try {
       await fb.setDoc(ref, starterData);
+    } catch (e) {
+      console.error("Initial cloud save failed:", e);
     }
   } else {
     window.store = { ...structuredClone(starterData), ...snap.data() };
@@ -190,9 +192,8 @@ async function save() {
 
     const fb = window.firebaseServices;
 
-    // Only sync to Firestore when Firebase is loaded and a user is signed in.
-    const user = await waitForFirebaseUser();
-    if (fb?.db && user) {
+    // Sync to Firestore whenever Firebase is available.
+    if (fb?.db) {
       const storeSize = new Blob([JSON.stringify(window.store)]).size;
 
       if (storeSize > 900000) {
@@ -1297,8 +1298,7 @@ async function publishListing(e) {
   await save();
   try {
     const fb = window.firebaseServices;
-    const user = await waitForFirebaseUser();
-    if (fb?.db && user) {
+    if (fb?.db) {
       await fb.setDoc(fb.doc(fb.db, "stores", "main"), window.store);
     }
   } catch (err) {
