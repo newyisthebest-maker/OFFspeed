@@ -128,6 +128,7 @@ async function initFirebaseSync() {
     }
   });
 
+  await loadProductsFromCloud();
   render();
 }
 
@@ -180,6 +181,41 @@ async function waitForFirebaseUser(timeout = 5000) {
   });
 }
 
+
+async function loadProductsFromCloud() {
+  const fb = window.firebaseServices;
+  if (!fb?.db || !fb.getDocs) return;
+  try {
+    const snap = await fb.getDocs(fb.collection(fb.db, "products"));
+    window.store.products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    localStorage.setItem(STORE_KEY, JSON.stringify(window.store));
+    render();
+  } catch (e) {
+    console.error("Failed loading products collection:", e);
+  }
+}
+
+async function syncProductsToCloud() {
+  const fb = window.firebaseServices;
+  if (!fb?.db || !fb.collection) return;
+  try {
+    const col = fb.collection(fb.db, "products");
+    const existing = await fb.getDocs(col);
+    const existingIds = new Set(existing.docs.map(d => d.id));
+
+    for (const p of window.store.products) {
+      await fb.setDoc(fb.doc(fb.db, "products", p.id), p);
+      existingIds.delete(p.id);
+    }
+
+    for (const id of existingIds) {
+      await fb.deleteDoc(fb.doc(fb.db, "products", id));
+    }
+  } catch (e) {
+    console.error("Products collection sync failed:", e);
+  }
+}
+
 async function save() {
   try {
     localStorage.setItem(
@@ -208,6 +244,7 @@ async function save() {
         fb.doc(fb.db, "stores", "main"),
         window.store
       );
+      await syncProductsToCloud();
     }
   } catch (error) {
     console.error("Storage error:", error);
