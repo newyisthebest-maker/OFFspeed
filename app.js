@@ -55,14 +55,14 @@ const defaultState = {
 };
 
 // --- Initialization Wrapper ---
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   window.$app = document.querySelector("#app");
   if (!window.$app) return;
 
   window.store = structuredClone(starterData);
   window.state = readJson(STATE_KEY, defaultState);
 
-  initFirebaseSync();
+  await initFirebaseSync();
 
   if (
     !window.store.products ||
