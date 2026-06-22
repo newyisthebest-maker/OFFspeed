@@ -287,6 +287,18 @@ function setState(patch, options = {}) {
 }
 
 function setNested(section, patch, options = {}) {
+  // Prevent full re-render on every keystroke in the admin form.
+  if (section === "adminForm") {
+    window.state = {
+      ...window.state,
+      adminForm: { ...window.state.adminForm, ...patch },
+    };
+    localStorage.setItem(
+      STATE_KEY,
+      JSON.stringify({ ...window.state, toast: "" })
+    );
+    return;
+  }
   setState({ [section]: { ...window.state[section], ...patch } }, options);
 }
 
