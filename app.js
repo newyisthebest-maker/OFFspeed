@@ -171,7 +171,14 @@ async function save() {
     const fb = window.firebaseServices;
 
     // Only sync to Firestore when Firebase is loaded and a user is signed in.
-    if (fb?.db && fb.auth?.currentUser) {
+    if (fb?.db) {
+      if (!fb.auth?.currentUser && fb.auth?.authStateReady) {
+        try { await fb.auth.authStateReady(); } catch (e) {}
+      }
+      if (!fb.auth?.currentUser) {
+        console.warn("Not signed in, skipping cloud save.");
+        return;
+      }
       const storeSize = new Blob([JSON.stringify(window.store)]).size;
 
       if (storeSize > 900000) {
