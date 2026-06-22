@@ -158,6 +158,26 @@ function readJson(key, fallback) {
   }
 }
 
+
+async function waitForFirebaseUser(timeout = 5000) {
+  const fb = window.firebaseServices;
+  if (!fb?.auth) return null;
+  if (fb.auth.currentUser) return fb.auth.currentUser;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      unsub && unsub();
+      resolve(fb.auth.currentUser || null);
+    }, timeout);
+    const unsub = fb.onAuthStateChanged
+      ? fb.onAuthStateChanged(fb.auth, (user) => {
+          clearTimeout(timer);
+          unsub && unsub();
+          resolve(user || null);
+        })
+      : null;
+  });
+}
+
 async function save() {
   try {
     localStorage.setItem(
@@ -171,14 +191,8 @@ async function save() {
     const fb = window.firebaseServices;
 
     // Only sync to Firestore when Firebase is loaded and a user is signed in.
-    if (fb?.db) {
-      if (!fb.auth?.currentUser && fb.auth?.authStateReady) {
-        try { await fb.auth.authStateReady(); } catch (e) {}
-      }
-      if (!fb.auth?.currentUser) {
-        console.warn("Not signed in, skipping cloud save.");
-        return;
-      }
+    const user = await waitForFirebaseUser();
+    if (fb?.db && user) {
       const storeSize = new Blob([JSON.stringify(window.store)]).size;
 
       if (storeSize > 900000) {
@@ -202,7 +216,8 @@ async function save() {
 
 async function forceCloudSave() {
   const fb = window.firebaseServices;
-  if (!fb?.db || !fb.auth?.currentUser) {
+  const user = await waitForFirebaseUser();
+  if (!fb?.db || !user) {
     setState({ toast: "Sign in to save to cloud." });
     clearToast();
     return;
