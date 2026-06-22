@@ -1071,7 +1071,11 @@ function bindEvents() {
   // Sync admin form inputs
   document.querySelectorAll("[data-admin]").forEach((input) => {
     input.addEventListener("input", (e) => {
-      setNested("adminForm", { [input.dataset.admin]: e.target.value });
+      setNested(
+        "adminForm",
+        { [input.dataset.admin]: e.target.value },
+        { focus: `[data-admin="${input.dataset.admin}"]` }
+      );
     });
   });
 
