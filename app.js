@@ -1295,6 +1295,15 @@ async function publishListing(e) {
   };
   window.store.products.unshift(product);
   await save();
+  try {
+    const fb = window.firebaseServices;
+    const user = await waitForFirebaseUser();
+    if (fb?.db && user) {
+      await fb.setDoc(fb.doc(fb.db, "stores", "main"), window.store);
+    }
+  } catch (err) {
+    console.error("Product cloud save failed:", err);
+  }
   setState({ adminForm: defaultState.adminForm, toast: "Published!" });
   clearToast();
 }
