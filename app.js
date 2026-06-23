@@ -1871,14 +1871,7 @@ window.addEventListener('focus', () => {
 });
 
 
-// Prevent menu from opening from input interactions.
-document.addEventListener("focusin", (e) => {
-  if (e.target.matches("input, textarea, select")) {
-    if (window.state?.menuOpen) {
-      setState({ menuOpen: false });
-    }
-  }
-});
+// Menu now stays open until the user closes it manually.
 
 
 document.addEventListener("click", (e) => {
