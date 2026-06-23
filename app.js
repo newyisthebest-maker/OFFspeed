@@ -1641,21 +1641,21 @@ function deleteProduct(productId) {
 
 let devEmailUnsubscribe = null;
 
-async function loadDeveloperEmails(){
+async async function loadDeveloperEmails(){
   try{
     const fb = window.firebaseServices;
-    if (!fb?.db) return;
+    if (!fb?.db || !fb?.collection || !fb?.getDocs) {
+      console.error('Missing Firebase services:', Object.keys(fb || {}));
+      return;
+    }
 
-    if (devEmailUnsubscribe) return;
-
-    devEmailUnsubscribe = fb.onSnapshot(
-      fb.collection(fb.db, 'developerEmails'),
-      (snap) => {
-        const emails = [];
-        snap.forEach(d => emails.push(d.id));
-        setState({ developerEmails: emails.sort() });
-      }
+    const snap = await fb.getDocs(
+      fb.collection(fb.db, 'developerEmails')
     );
+
+    const emails = [];
+    snap.forEach(d => emails.push(d.id));
+    setState({ developerEmails: emails.sort() });
   }catch(e){
     console.error(e);
   }
