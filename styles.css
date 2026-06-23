@@ -911,3 +911,19 @@ border:1px solid #000;background:#fff;color:#000;
 [data-upload-next]::before {
   transform: rotate(45deg);
 }
+
+
+.dev-warning {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ff7a00;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  z-index: 9999;
+  pointer-events: none;
+  user-select: none;
+  max-width: 90%;
+}
