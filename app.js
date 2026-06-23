@@ -297,7 +297,6 @@ async function save() {
         fb.doc(fb.db, "stores", "main"),
         cloudStore
       );
-      await syncProductsToCloud();
     }
   } catch (error) {
     console.error("Storage error:", error);
@@ -1470,7 +1469,7 @@ async function login() {
   }
 }
 
-async function publishListing(e) {
+async async function publishListing(e) {
   e.preventDefault();
   const form = window.state.adminForm;
   const product = {
@@ -1483,11 +1482,11 @@ async function publishListing(e) {
     images: (form.images && form.images.length ? form.images : [form.image]).filter(Boolean),
   };
   window.store.products.unshift(product);
-  await save();
+  localStorage.setItem(STORE_KEY, JSON.stringify(window.store));
   try {
     const fb = window.firebaseServices;
     if (fb?.db) {
-      await fb.setDoc(fb.doc(fb.db, "stores", "main"), buildCloudStore());
+      await fb.setDoc(fb.doc(fb.db, "products", product.id), product);
     }
   } catch (err) {
     console.error("Product cloud save failed:", err);
