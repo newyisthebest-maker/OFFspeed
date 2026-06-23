@@ -247,13 +247,32 @@ function buildLocalStoreCache() {
   };
 }
 
+
+function safeSaveStoreCache() {
+  try {
+    safeSaveStoreCache();
+  } catch (e) {
+    if (e && (e.name === "QuotaExceededError" || String(e).includes("quota"))) {
+      try {
+        localStorage.removeItem(STORE_KEY);
+        safeSaveStoreCache();
+      } catch (_) {
+        console.warn("Could not save store cache, skipping local cache.");
+      }
+    } else {
+      throw e;
+    }
+  }
+}
+
+
 async function loadProductsFromCloud() {
   const fb = window.firebaseServices;
   if (!fb?.db || !fb.getDocs) return;
   try {
     const snap = await fb.getDocs(fb.collection(fb.db, "stores", "main", "products"));
     window.store.products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    localStorage.setItem(STORE_KEY, JSON.stringify(buildLocalStoreCache()));
+    safeSaveStoreCache();
     render();
   } catch (e) {
     console.error("Failed loading products collection:", e);
@@ -289,7 +308,7 @@ async function save() {
     );
 
     // Always keep a local backup so refreshes don't lose data.
-    localStorage.setItem(STORE_KEY, JSON.stringify(buildLocalStoreCache()));
+    safeSaveStoreCache();
 
     const fb = window.firebaseServices;
 
@@ -1495,7 +1514,7 @@ async function publishListing(e) {
     images: (form.images && form.images.length ? form.images : [form.image]).filter(Boolean),
   };
   window.store.products.unshift(product);
-  localStorage.setItem(STORE_KEY, JSON.stringify(buildLocalStoreCache()));
+  safeSaveStoreCache();
   try {
     const fb = window.firebaseServices;
     if (fb?.db) {
