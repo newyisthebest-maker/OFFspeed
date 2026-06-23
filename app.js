@@ -2016,3 +2016,31 @@ async function startStripePayment(amountInCents) {
     alert("Unable to contact Stripe server.");
   }
 }
+
+
+// Real Stripe Elements preparation
+let stripeElements = null;
+let cardElement = null;
+
+function mountStripeElements() {
+  if (!window.Stripe || stripeElements) return;
+
+  try {
+    stripeInstance = stripeInstance || Stripe(STRIPE_PUBLIC_KEY);
+    stripeElements = stripeInstance.elements();
+
+    const container = document.getElementById("stripe-card-container");
+    if (!container) return;
+
+    container.innerHTML = '<div id="card-element"></div><div id="card-errors" style="color:red;margin-top:10px;"></div>';
+
+    cardElement = stripeElements.create("card");
+    cardElement.mount("#card-element");
+  } catch (e) {
+    console.error("Stripe mount failed:", e);
+  }
+}
+
+setTimeout(() => {
+  try { mountStripeElements(); } catch(e){}
+}, 1000);
