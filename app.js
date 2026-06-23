@@ -100,6 +100,7 @@ const defaultState = {
   adminDiscountEditIndex: null,
   developerEmails: [],
   openOrderId: null,
+  currentProductImageIndex: 0,
   toast: "",
 };
 
@@ -702,7 +703,7 @@ function renderProductDetail(developer) {
     <section class="detail">
       <div class="card-figure detail-figure">
       <button type="button" data-gallery-prev>&lt;</button>
-      <div data-gallery-image>${productFigure({...product,image:((product.images&&product.images[0])||product.image)})}</div>
+      <div data-gallery-image>${productFigure({...product,image:((product.images&&product.images.length?product.images[window.state.currentProductImageIndex||0]:product.image)||product.image)})}</div>
       <button type="button" data-gallery-next>&gt;</button>
       </div>
       <div class="detail-body">
@@ -827,13 +828,17 @@ function renderAdmin() {
     <div class="admin-layout">
       <form class="panel stack" data-admin-form>
         <h3 class="panel-title">New Listing</h3>
-        <div class="dropzone" data-dropzone style="cursor: pointer;">
-          ${
-            window.state.adminForm.image
-              ? `<img class="preview" src="${window.state.adminForm.image}" alt="Product upload preview" style="max-width: 100px;" /><div>${(window.state.adminForm.images||[]).length} image(s)</div>`
-              : "Click to upload image(s)"
-          }
-          <input type="file" data-file-input accept="image/*" multiple hidden />
+        <div class="uploader-nav">
+          <button type="button" class="gallery-arrow left" data-upload-prev>&lt;</button>
+          <div class="dropzone" data-dropzone style="cursor: pointer;">
+            ${
+              (window.state.adminForm.images?.[window.state.adminForm.uploadSlot || 0])
+                ? `<img class="preview" src="${window.state.adminForm.images[window.state.adminForm.uploadSlot || 0]}" alt="Product upload preview" style="max-width: 100px;" /><div>${(window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1)}</div>`
+                : `Click to upload ${((window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1))}`
+            }
+            <input type="file" data-file-input accept="image/*" hidden />
+          </div>
+          <button type="button" class="gallery-arrow right" data-upload-next>&gt;</button>
         </div>
         <label class="label">Name<input class="input" data-admin="name" value="${escapeAttr(
           window.state.adminForm.name
@@ -1167,31 +1172,48 @@ function bindEvents() {
   // File Upload Logic
   const fileInput = document.querySelector("[data-file-input]");
   fileInput?.addEventListener("change", (e) => {
-    const files = [...(e.target.files || [])].slice(0,5);
-    if (!files.length) return;
-    const results = [];
-    let done = 0;
-    files.forEach((file, index) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        results[index] = event.target.result;
-        done++;
-        if (done === files.length) {
-          setNested("adminForm", {
-            image: results[0],
-            images: results,
-            fileName: files[0].name
-          });
-          render();
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const slot = window.state.adminForm.uploadSlot || 0;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const images = [...(window.state.adminForm.images || [])];
+      images[slot] = event.target.result;
+      setNested("adminForm", {
+        image: images[0] || event.target.result,
+        images,
+        fileName: file.name
+      });
+      render();
+    };
+    reader.readAsDataURL(file);
   });
 
-  const dropzone = document.querySelector("[data-dropzone]");
+const dropzone = document.querySelector("[data-dropzone]");
   dropzone?.addEventListener("click", () => {
     document.querySelector("[data-file-input]").click();
+  });
+
+  document.querySelector("[data-gallery-prev]")?.addEventListener("click", () => {
+    const product = window.store.products.find(p => p.id === window.state.selectedProductId);
+    const images = product?.images?.length ? product.images : [product?.image];
+    const idx = ((window.state.currentProductImageIndex || 0) - 1 + images.length) % images.length;
+    setState({ currentProductImageIndex: idx });
+  });
+  document.querySelector("[data-gallery-next]")?.addEventListener("click", () => {
+    const product = window.store.products.find(p => p.id === window.state.selectedProductId);
+    const images = product?.images?.length ? product.images : [product?.image];
+    const idx = ((window.state.currentProductImageIndex || 0) + 1) % images.length;
+    setState({ currentProductImageIndex: idx });
+  });
+
+  document.querySelector("[data-upload-prev]")?.addEventListener("click", () => {
+    const slot = ((window.state.adminForm.uploadSlot || 0) + 4) % 5;
+    setNested("adminForm", { uploadSlot: slot });
+  });
+  document.querySelector("[data-upload-next]")?.addEventListener("click", () => {
+    const slot = ((window.state.adminForm.uploadSlot || 0) + 1) % 5;
+    setNested("adminForm", { uploadSlot: slot });
   });
 
   document
