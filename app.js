@@ -1083,9 +1083,19 @@ function bindEvents() {
   document
     .querySelectorAll("[data-action='toggle-menu']")
     .forEach((b) =>
-      b.addEventListener("click", () =>
-        setState({ menuOpen: !window.state.menuOpen })
-      )
+      b.addEventListener("click", (e) => {
+        const isHamburger = b.classList.contains("hamburger");
+        const isClose = b.classList.contains("icon-button");
+        const isBackdrop = b.classList.contains("menu-backdrop");
+
+        if (isHamburger) {
+          setState({ menuOpen: true });
+        } else if (isClose || isBackdrop) {
+          setState({ menuOpen: false });
+        }
+
+        e.stopPropagation();
+      })
     );
   document
     .querySelectorAll("[data-product]")
