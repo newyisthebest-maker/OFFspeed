@@ -596,7 +596,7 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
 
 /* Smooth drawer animations */
 .menu {
-  animation: menuSlideOut 0.32s cubic-bezier(.22,1,.36,1) forwards;
+  transform: translateX(100%);
 }
 
 .menu.open {
@@ -604,7 +604,8 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
 }
 
 .menu-backdrop {
-  animation: backdropOut 0.32s cubic-bezier(.22,1,.36,1) forwards;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .menu-backdrop.open {
