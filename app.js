@@ -95,6 +95,7 @@ const defaultState = {
     category: "Shirts",
     image: "",
     fileName: "",
+    images: [],
   },
   adminDiscountEditIndex: null,
   developerEmails: [],
@@ -660,8 +661,9 @@ function renderProductCard(product) {
 }
 
 function productFigure(product) {
-  if (product.image)
-    return `<img src="${product.image}" alt="${escapeHtml(
+  const mainImage = (product.images && product.images[0]) || product.image;
+  if (mainImage)
+    return `<img src="${mainImage}" alt="${escapeHtml(
       product.name
     )} product image" />`;
   return baseballSvg();
@@ -698,7 +700,11 @@ function renderProductDetail(developer) {
     : money(product.price);
   return `
     <section class="detail">
-      <div class="card-figure detail-figure">${productFigure(product)}</div>
+      <div class="card-figure detail-figure">
+      <button type="button" data-gallery-prev>&lt;</button>
+      <div data-gallery-image>${productFigure({...product,image:((product.images&&product.images[0])||product.image)})}</div>
+      <button type="button" data-gallery-next>&gt;</button>
+      </div>
       <div class="detail-body">
         <button class="ghost" type="button" data-action="back-shopping">Back</button>
         <h2>${escapeHtml(product.name)}</h2>
@@ -824,10 +830,10 @@ function renderAdmin() {
         <div class="dropzone" data-dropzone style="cursor: pointer;">
           ${
             window.state.adminForm.image
-              ? `<img class="preview" src="${window.state.adminForm.image}" alt="Product upload preview" style="max-width: 100px;" />`
-              : "Click to upload image"
+              ? `<img class="preview" src="${window.state.adminForm.image}" alt="Product upload preview" style="max-width: 100px;" /><div>${(window.state.adminForm.images||[]).length} image(s)</div>`
+              : "Click to upload image(s)"
           }
-          <input type="file" data-file-input accept="image/*" hidden />
+          <input type="file" data-file-input accept="image/*" multiple hidden />
         </div>
         <label class="label">Name<input class="input" data-admin="name" value="${escapeAttr(
           window.state.adminForm.name
@@ -1161,32 +1167,26 @@ function bindEvents() {
   // File Upload Logic
   const fileInput = document.querySelector("[data-file-input]");
   fileInput?.addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxSize = 900;
-        let { width, height } = img;
-        const scale = Math.min(maxSize / width, maxSize / height, 1);
-        width = Math.round(width * scale);
-        height = Math.round(height * scale);
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressed = canvas.toDataURL("image/jpeg", 0.82);
-        setNested("adminForm", {
-          image: compressed,
-          fileName: file.name
-        });
+    const files = [...(e.target.files || [])].slice(0,5);
+    if (!files.length) return;
+    const results = [];
+    let done = 0;
+    files.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        results[index] = event.target.result;
+        done++;
+        if (done === files.length) {
+          setNested("adminForm", {
+            image: results[0],
+            images: results,
+            fileName: files[0].name
+          });
+          render();
+        }
       };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
+    });
   });
 
   const dropzone = document.querySelector("[data-dropzone]");
@@ -1449,6 +1449,7 @@ async function publishListing(e) {
     category: form.category || "Other",
     description: form.description || "",
     image: form.image || "",
+    images: (form.images && form.images.length ? form.images : [form.image]).filter(Boolean),
   };
   window.store.products.unshift(product);
   await save();
@@ -1831,4 +1832,22 @@ document.addEventListener("focusin", (e) => {
       setState({ menuOpen: false });
     }
   }
+});
+
+
+document.addEventListener("click", (e) => {
+  const product = window.store.products.find((p)=>p.id===window.state.selectedProductId);
+  if (!product) return;
+  const images = (product.images && product.images.length ? product.images : [product.image]).filter(Boolean);
+  if (!images.length) return;
+  window.state.galleryIndex = window.state.galleryIndex || 0;
+  if (e.target.closest("[data-gallery-next]")) {
+    window.state.galleryIndex = (window.state.galleryIndex + 1) % images.length;
+  } else if (e.target.closest("[data-gallery-prev]")) {
+    window.state.galleryIndex = (window.state.galleryIndex - 1 + images.length) % images.length;
+  } else {
+    return;
+  }
+  const holder = document.querySelector("[data-gallery-image]");
+  if (holder) holder.innerHTML = `<img src="${images[window.state.galleryIndex]}" style="max-width:100%;">`;
 });
