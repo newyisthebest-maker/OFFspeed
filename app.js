@@ -1968,3 +1968,39 @@ function buildCloudStore() {
 }
 
 
+
+
+// ===== OFFspeed Stripe Starter =====
+let stripe = null;
+let stripeElements = null;
+let stripeCard = null;
+
+async function startStripePayment(amountInCents) {
+  const response = await fetch(
+    "https://offspeed-stripe-server.onrender.com/create-payment-intent",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: amountInCents })
+    }
+  );
+  return response.json();
+}
+
+window.initializeStripeCheckout = function (publishableKey) {
+  if (!window.Stripe) return false;
+  if (stripeCard) return true;
+
+  stripe = Stripe(publishableKey);
+  stripeElements = stripe.elements();
+
+  const container = document.getElementById("card-element");
+  if (!container) return false;
+
+  stripeCard = stripeElements.create("card", {
+    hidePostalCode: true
+  });
+  stripeCard.mount("#card-element");
+  return true;
+};
+// ===== End OFFspeed Stripe Starter =====
