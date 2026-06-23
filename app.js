@@ -1129,9 +1129,19 @@ function bindEvents() {
 
   document
     .querySelector("[data-field='query']")
-    ?.addEventListener("input", (e) =>
-      setState({ query: e.target.value, view: "shopping" })
-    );
+    ?.addEventListener("input", (e) => {
+      const value = e.target.value;
+      const cursor = e.target.selectionStart;
+      setState({ query: value, view: "shopping" });
+      requestAnimationFrame(() => {
+        const input = document.querySelector("[data-field='query']");
+        if (input) {
+          input.focus();
+          input.value = value;
+          try { input.setSelectionRange(cursor, cursor); } catch {}
+        }
+      });
+    });
   document
     .querySelector("[data-action='apply-code']")
     ?.addEventListener("click", () => {
