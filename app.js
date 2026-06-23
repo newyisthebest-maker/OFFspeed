@@ -1709,9 +1709,3 @@ document.addEventListener('input', (e) => {
 });
 
 
-document.addEventListener('click', (e) => {
-  const el = e.target.closest('button,a,input,label');
-  if (!el) return;
-  if (el.matches('[data-action="toggle-menu"]')) return;
-  e.stopPropagation();
-}, true);
