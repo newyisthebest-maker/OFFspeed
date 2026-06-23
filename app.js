@@ -820,7 +820,7 @@ function renderCheckout() {
 
       <h3>Payment Information</h3>
       <div id="stripe-card-container" class="empty">
-        Card fields will appear here after Stripe is initialized.
+        
       </div>
 
       <button id="purchase-btn" class="primary-btn">
@@ -2054,3 +2054,36 @@ function forceMountStripeCard(){
 }
 
 setInterval(forceMountStripeCard, 1000);
+
+
+function observeStripeContainer() {
+  const container = document.getElementById("stripe-card-container");
+  if (!container || !window.Stripe) return;
+
+  try {
+    stripeInstance = stripeInstance || Stripe(STRIPE_PUBLIC_KEY);
+    stripeElements = stripeElements || stripeInstance.elements();
+
+    if (!document.getElementById("card-element")) {
+      container.innerHTML = '<div id="card-element"></div><div id="card-errors"></div>';
+      if (cardElement) {
+        try { cardElement.destroy(); } catch(e){}
+      }
+      cardElement = stripeElements.create("card");
+      cardElement.mount("#card-element");
+    }
+  } catch (e) {
+    console.error("Stripe observer error:", e);
+  }
+}
+
+new MutationObserver(() => {
+  observeStripeContainer();
+}).observe(document.body, {
+  childList: true,
+  subtree: true
+});
+
+setTimeout(observeStripeContainer, 100);
+setTimeout(observeStripeContainer, 500);
+setTimeout(observeStripeContainer, 1000);
