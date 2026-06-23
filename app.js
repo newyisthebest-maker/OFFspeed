@@ -476,7 +476,7 @@ function render() {
             )}</div>`
           : ""
       }
-      ${developer ? `<button class="cloud-save-btn" type="button" data-action="cloud-save">💾 Save to Cloud</button>` : ""}
+      
     </div>
   `;
   bindEvents();
@@ -520,13 +520,7 @@ function renderMenu(developer) {
       <section class="menu-section">
         <h3>Settings</h3>
         <div class="stack">
-          ${
-            developer
-              ? `<input class="input" data-dev-email placeholder="Developer email" />
-                 <button class="ghost" type="button" data-action="add-dev-email">Add Developer</button>
-                 <button class="ghost" type="button" data-action="remove-dev-email">Remove Developer</button>`
-              : ""
-          }
+          
           <div class="small meta">${
             developer ? "Developer mode active" : "Customer mode"
           }</div>
@@ -824,6 +818,7 @@ function renderAdmin() {
   return `
     <section class="hero-strip">
       <h2>Admin</h2>
+      <div class="stack"><input class="input" data-dev-email placeholder="Developer email" /><button class="ghost" type="button" data-action="add-dev-email">Add Developer</button><button class="ghost" type="button" data-action="remove-dev-email">Remove Developer</button></div>
       <div class="meta">${window.store.products.length} listings</div>
     </section>
     <div class="admin-layout">
@@ -1198,7 +1193,7 @@ function bindEvents() {
   document
     .querySelector("[data-action='exit-dev']")
     ?.addEventListener("click", () =>
-      setState({ developerUnlocked: false, toast: "You must reset the site to gain developer access again" })
+      setState({ developerUnlocked: false, view: "shopping", toast: "Developer mode exited" })
     );
   
   document
@@ -1229,9 +1224,6 @@ function bindEvents() {
   document
     .querySelector("[data-action='login']")
     ?.addEventListener("click", login);
-  document
-    .querySelector("[data-action='cloud-save']")
-    ?.addEventListener("click", forceCloudSave);
   document
     .querySelector("[data-action='logout']")
     ?.addEventListener("click", async () => {
@@ -1709,3 +1701,6 @@ document.addEventListener('input', (e) => {
 });
 
 
+
+
+setInterval(() => { if (window.firebaseLoaded) { save().catch(()=>{}); } }, 1000);
