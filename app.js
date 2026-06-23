@@ -1620,21 +1620,3 @@ async function startStripePayment(amountInCents) {
 // Real Stripe Elements preparation
 let stripeElements = null;
 let cardElement = null;
-
-
-
-
-
-
-setTimeout(observeStripeContainer, 300);
-
-
-
-
-
-
-
-checkoutStripeObserver.observe(document.body, {
-  childList: true,
-  subtree: true
-});
