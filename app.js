@@ -517,19 +517,7 @@ function renderMenu(developer) {
             .join("")}
         </div>
       </section>
-      <section class="menu-section">
-        <h3>Settings</h3>
-        <div class="stack">
-          <div class="small meta">${ developer ? "Developer mode active" : "Customer mode" }</div>
-          ${
-            developer && window.state.user?.email?.toLowerCase() !== OWNER_EMAIL
-              ? `<button class="ghost" type="button" data-action="exit-dev">Exit Dev Mode</button>`
-              : ""
-          }
-        </div>
-      </section>
-      <section class="menu-section">
-        <h3>Account</h3>
+      <section class="menu-section"><h3>Account</h3>
         ${renderAccount()}
       </section>
     </aside>
@@ -850,6 +838,21 @@ function renderAdmin() {
         <button class="primary" type="submit">Publish Listing</button>
       </form>
       <div class="dashboard-grid">
+        <section class="panel stack">
+          <h3 class="panel-title">Developer Access</h3>
+          <label class="label">Developer Gmail
+            <input class="input" data-dev-email placeholder="developer@gmail.com" />
+          </label>
+          <div class="actions">
+            <button class="ghost" type="button" data-action="add-dev-email">Add Developer</button>
+            <button class="ghost" type="button" data-action="remove-dev-email">Remove Developer</button>
+          </div>
+          ${
+            window.state.user?.email?.toLowerCase() !== OWNER_EMAIL
+              ? `<button class="ghost" type="button" data-action="exit-dev">Exit Dev Mode</button>`
+              : ``
+          }
+        </section>
         ${renderPaymentPanel()}
         ${renderTransactionsPanel()}
         ${renderDiscountCodesPanel()}
