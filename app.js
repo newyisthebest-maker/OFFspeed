@@ -339,31 +339,7 @@ async function save() {
 }
 
 
-async function forceCloudSave() {
-  const fb = window.firebaseServices;
-  const user = await waitForFirebaseUser();
-  if (!fb?.db || !user) {
-    setState({ toast: "Sign in to save to cloud." });
-    clearToast();
-    return;
-  }
-  try {
-    const cloudStore = buildCloudStore();
-      const storeSize = new Blob([JSON.stringify(cloudStore)]).size;
-    if (storeSize > 900000) {
-      setState({ toast: "⚠️ Store is too large for Firebase. Use smaller images or remove products." });
-      clearToast();
-      return;
-    }
-
-    await fb.setDoc(fb.doc(fb.db, "stores", "main"), buildCloudStore());
-    setState({ toast: "✅ Saved to Cloud" });
-  } catch (e) {
-    console.error(e);
-    setState({ toast: "❌ Cloud save failed" });
-  }
-  clearToast();
-}
+// Manual cloud save removed - autosave enabled
 
 function setState(patch, options = {}) {
   window.state = { ...window.state, ...patch };
@@ -515,7 +491,7 @@ function render() {
             )}</div>`
           : ""
       }
-      ${developer ? `<button class="cloud-save-btn" type="button" data-action="cloud-save">💾 Save to Cloud</button>` : ""}
+      
     </div>
   `;
   bindEvents();
@@ -738,9 +714,9 @@ function renderProductDetail(developer) {
   return `
     <section class="detail">
       <div class="card-figure detail-figure">
-      <button type="button" class="shopping-gallery-arrow shopping-gallery-arrow-left" data-gallery-prev>&lt;</button>
+      <button type="button" data-gallery-prev>&lt;</button>
       <div data-gallery-image>${productFigure({...product,image:((product.images&&product.images.length?product.images[window.state.currentProductImageIndex||0]:product.image)||product.image)})}</div>
-      <button type="button" class="shopping-gallery-arrow shopping-gallery-arrow-right" data-gallery-next>&gt;</button>
+      <button type="button" data-gallery-next>&gt;</button>
       </div>
       <div class="detail-body">
         <button class="ghost" type="button" data-action="back-shopping">Back</button>
@@ -1298,9 +1274,6 @@ const dropzone = document.querySelector("[data-dropzone]");
   document
     .querySelector("[data-action='login']")
     ?.addEventListener("click", login);
-  document
-    .querySelector("[data-action='cloud-save']")
-    ?.addEventListener("click", forceCloudSave);
   document
     .querySelector("[data-action='logout']")
     ?.addEventListener("click", async () => {
