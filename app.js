@@ -239,7 +239,7 @@ async function loadProductsFromCloud() {
   const fb = window.firebaseServices;
   if (!fb?.db || !fb.getDocs) return;
   try {
-    const snap = await fb.getDocs(fb.collection(fb.db, "products"));
+    const snap = await fb.getDocs(fb.collection(fb.db, "stores", "main", "products"));
     window.store.products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     localStorage.setItem(STORE_KEY, JSON.stringify(window.store));
     render();
@@ -252,17 +252,17 @@ async function syncProductsToCloud() {
   const fb = window.firebaseServices;
   if (!fb?.db || !fb.collection) return;
   try {
-    const col = fb.collection(fb.db, "products");
+    const col = fb.collection(fb.db, "stores", "main", "products");
     const existing = await fb.getDocs(col);
     const existingIds = new Set(existing.docs.map(d => d.id));
 
     for (const p of window.store.products) {
-      await fb.setDoc(fb.doc(fb.db, "products", p.id), p);
+      await fb.setDoc(fb.doc(fb.db, "stores", "main", "products", p.id), p);
       existingIds.delete(p.id);
     }
 
     for (const id of existingIds) {
-      await fb.deleteDoc(fb.doc(fb.db, "products", id));
+      await fb.deleteDoc(fb.doc(fb.db, "stores", "main", "products", id));
     }
   } catch (e) {
     console.error("Products collection sync failed:", e);
@@ -1487,7 +1487,7 @@ async function publishListing(e) {
   try {
     const fb = window.firebaseServices;
     if (fb?.db) {
-      await fb.setDoc(fb.doc(fb.db, "products", product.id), product);
+      await fb.setDoc(fb.doc(fb.db, "stores", "main", "products", product.id), product);
     }
   } catch (err) {
     console.error("Product cloud save failed:", err);
