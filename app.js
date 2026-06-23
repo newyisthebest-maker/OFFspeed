@@ -810,15 +810,15 @@ function renderCheckout() {
       <input class="input" placeholder="State">
       <input class="input" placeholder="ZIP Code">
 
-      <h3>Payment Information</h3>
-      <div class="empty">
-        Stripe integration server is ready.<br>
-        Next step: connect Stripe Elements and payment processing.
-      </div>
 
-      <button class="primary-btn" disabled>
-        Purchase (Coming Soon)
+      <h3>Payment Information</h3>
+      <div id="card-element"></div>
+      <div id="card-errors" style="color:#dc2626;margin-top:10px;"></div>
+
+      <button id="purchase-btn" class="primary-btn">
+        Purchase
       </button>
+
     </div>
   `;
 }
