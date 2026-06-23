@@ -1175,7 +1175,7 @@ function bindEvents() {
   fileInput?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const slot = window.state.adminForm.uploadSlot || 0;
+    const slot = (typeof window.OFFspeedImageSlot === "number" ? window.OFFspeedImageSlot : (window.state.adminForm.uploadSlot || 0));
     const reader = new FileReader();
     reader.onload = (event) => {
       const images = [...(window.state.adminForm.images || [])];
