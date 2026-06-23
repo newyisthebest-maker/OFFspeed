@@ -1068,3 +1068,16 @@ border:1px solid #000;background:#fff;color:#000;
   border:1px solid #d8d8d8;
   border-radius:10px;
 }
+
+
+#stripe-card-container{
+  min-height:70px !important;
+}
+
+#card-element{
+  min-height:24px !important;
+  background:#fff;
+  border:1px solid #d8d8d8;
+  border-radius:10px;
+  padding:16px;
+}
