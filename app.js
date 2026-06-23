@@ -1674,3 +1674,26 @@ window.initDrawerMenu = function(){
 document.addEventListener('DOMContentLoaded', ()=>{
   setTimeout(()=>window.initDrawerMenu && window.initDrawerMenu(), 300);
 });
+
+
+// Force existing menu to become a right-side drawer.
+window.forceRightDrawerMenu = function(){
+  const candidates = Array.from(document.querySelectorAll(
+    '#sideMenu,.side-menu,.menu,.menu-panel,.sidebar,nav,[class*="menu"],[class*="drawer"]'
+  ));
+
+  candidates.forEach(el=>{
+    const s = el.style;
+    s.position = 'fixed';
+    s.top = '0';
+    s.right = '0';
+    s.left = 'auto';
+    s.height = '100vh';
+    s.maxWidth = '85vw';
+    s.zIndex = '9999';
+  });
+};
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  setTimeout(()=>window.forceRightDrawerMenu && window.forceRightDrawerMenu(),500);
+});
