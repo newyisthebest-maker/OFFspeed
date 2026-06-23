@@ -420,7 +420,7 @@ function render() {
         ${navButton("checkout", "Checkout")}
         ${developer ? navButton("admin", "Admin") : ""}
       </nav>
-      ${window.state.menuOpen ? renderMenu(developer) : ""}
+      ${renderMenu(developer)}
       <main class="main">${renderMain(developer)}</main>
       ${
         window.state.toast
@@ -442,8 +442,9 @@ function navButton(view, label) {
 
 function renderMenu(developer) {
   return `
-    <div class="menu-backdrop" data-action="toggle-menu"></div>
-    <aside class="menu" aria-label="Menu">
+    <div class="menu-overlay ${window.state.menuOpen ? "open" : ""}">
+      <div class="menu-backdrop" data-action="toggle-menu"></div>
+      <aside class="menu ${window.state.menuOpen ? "open" : ""}" aria-label="Menu">
       <div class="menu-head">
         <h2>Menu</h2>
         <button class="icon-button" type="button" data-action="toggle-menu" aria-label="Close menu">&times;</button>
@@ -489,6 +490,7 @@ function renderMenu(developer) {
         ${renderAccount()}
       </section>
     </aside>
+    </div>
   `;
 }
 
@@ -764,6 +766,7 @@ function renderSummary(details, showCheckoutButton) {
           : ""
       }
     </aside>
+    </div>
   `;
 }
 
@@ -1630,70 +1633,4 @@ document.addEventListener('input', (e) => {
   if (t.matches('input[type="search"], #search, .search-input')) {
     setTimeout(() => window.updateSearchSuggestions(), 0);
   }
-});
-
-
-// Added by ChatGPT: drawer menu support
-window.initDrawerMenu = function(){
-  const menu = document.querySelector('#sideMenu,.side-menu,.menu-panel,.menu');
-  const burger = document.querySelector('#hamburger,.hamburger,.menu-button,.menu-toggle');
-  if (!menu || !burger) return;
-
-  let overlay = document.getElementById('menuOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'menuOverlay';
-    overlay.className = 'menu-overlay';
-    document.body.appendChild(overlay);
-  }
-
-  function openMenu(){
-    menu.classList.add('open');
-    overlay.classList.add('open');
-    document.body.classList.add('menu-open');
-  }
-
-  function closeMenu(){
-    menu.classList.remove('open');
-    overlay.classList.remove('open');
-    document.body.classList.remove('menu-open');
-  }
-
-  burger.addEventListener('click', function(e){
-    e.preventDefault();
-    openMenu();
-  });
-
-  overlay.addEventListener('click', closeMenu);
-
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Escape') closeMenu();
-  });
-};
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  setTimeout(()=>window.initDrawerMenu && window.initDrawerMenu(), 300);
-});
-
-
-// Force existing menu to become a right-side drawer.
-window.forceRightDrawerMenu = function(){
-  const candidates = Array.from(document.querySelectorAll(
-    '#sideMenu,.side-menu,.menu,.menu-panel,.sidebar,nav,[class*="menu"],[class*="drawer"]'
-  ));
-
-  candidates.forEach(el=>{
-    const s = el.style;
-    s.position = 'fixed';
-    s.top = '0';
-    s.right = '0';
-    s.left = 'auto';
-    s.height = '100vh';
-    s.maxWidth = '85vw';
-    s.zIndex = '9999';
-  });
-};
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  setTimeout(()=>window.forceRightDrawerMenu && window.forceRightDrawerMenu(),500);
 });
