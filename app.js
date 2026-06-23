@@ -1504,25 +1504,52 @@ async function login() {
 async function publishListing(e) {
   e.preventDefault();
   const form = window.state.adminForm;
+  const productId = generateId();
   const product = {
-    id: generateId(),
+    id: productId,
     name: form.name || "",
     price: Number(form.price) || 0,
     category: form.category || "Other",
     description: form.description || "",
-    image: form.image || "",
-    images: (form.images && form.images.length ? form.images : [form.image]).filter(Boolean),
+    image: "",
+    images: [],
   };
-  window.store.products.unshift(product);
-  safeSaveStoreCache();
+
   try {
     const fb = window.firebaseServices;
+
+    if (fb?.storage) {
+      const sourceImages = (form.images && form.images.length ? form.images : [form.image]).filter(Boolean);
+      const urls = [];
+
+      for (let i = 0; i < sourceImages.length; i++) {
+        const img = sourceImages[i];
+        const blob = await (await fetch(img)).blob();
+        const imageRef = fb.ref(fb.storage, `products/${productId}/${Date.now()}_${i}.webp`);
+        await fb.uploadBytes(imageRef, blob);
+        urls.push(await fb.getDownloadURL(imageRef));
+      }
+
+      product.images = urls;
+      product.image = urls[0] || "";
+    } else {
+      product.images = (form.images && form.images.length ? form.images : [form.image]).filter(Boolean);
+      product.image = product.images[0] || "";
+    }
+
+    window.store.products.unshift(product);
+    safeSaveStoreCache();
+
     if (fb?.db) {
       await fb.setDoc(fb.doc(fb.db, "stores", "main", "products", product.id), product);
     }
   } catch (err) {
     console.error("Product cloud save failed:", err);
+    setState({ toast: "Upload failed. Check Storage rules." });
+    clearToast();
+    return;
   }
+
   setState({ adminForm: defaultState.adminForm, toast: "Published!" });
   clearToast();
 }
