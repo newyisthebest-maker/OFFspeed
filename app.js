@@ -1217,18 +1217,6 @@ function bindEvents() {
         clearToast();
       }
     });
-  document
-    .querySelector("[data-action='remove-dev-email']")
-    ?.addEventListener("click", async () => {
-      const email = document.querySelector("[data-dev-email]")?.value.trim().toLowerCase();
-      if (!email || email === OWNER_EMAIL) return;
-      const fb = window.firebaseServices;
-      if (fb?.db) {
-        await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email));
-        await loadDeveloperEmails(); setState({ toast: "Developer removed" });
-        clearToast();
-      }
-    });
 
   document.querySelectorAll("[data-remove-dev]").forEach(btn=>btn.addEventListener("click", async ()=>{ const email=btn.dataset.removeDev; const fb=window.firebaseServices; if(fb?.db){ await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email)); loadDeveloperEmails(); setState({toast:"Developer removed"});}}));
 
@@ -1745,3 +1733,43 @@ document.addEventListener('input', (e) => {
   }
 });
 
+
+
+// Developer email handlers survive re-renders
+document.addEventListener("click", async (e) => {
+  const addBtn = e.target.closest("[data-action='add-dev-email']");
+  if (addBtn) {
+    const email = document.querySelector("[data-dev-email]")?.value?.trim()?.toLowerCase();
+    if (!email || email === OWNER_EMAIL) return;
+    const fb = window.firebaseServices;
+    try {
+      await fb.setDoc(fb.doc(fb.db, "developerEmails", email), {
+        email,
+        addedAt: Date.now()
+      });
+      if (typeof loadDeveloperEmails === "function") await loadDeveloperEmails();
+      const inp = document.querySelector("[data-dev-email]");
+      if (inp) inp.value = "";
+      setState({ toast: "Developer added" });
+      clearToast();
+    } catch (err) {
+      console.error("Failed to add developer:", err);
+    }
+    return;
+  }
+
+  const removeBtn = e.target.closest("[data-remove-dev]");
+  if (removeBtn) {
+    const email = removeBtn.dataset.removeDev;
+    if (!email || email === OWNER_EMAIL) return;
+    const fb = window.firebaseServices;
+    try {
+      if (fb.deleteDoc) {
+        await fb.deleteDoc(fb.doc(fb.db, "developerEmails", email));
+      }
+      if (typeof loadDeveloperEmails === "function") await loadDeveloperEmails();
+    } catch (err) {
+      console.error("Failed to remove developer:", err);
+    }
+  }
+});
