@@ -2010,51 +2010,6 @@ async function startStripePayment(amountInCents) {
 let stripeElements = null;
 let cardElement = null;
 
-function mountStripeElements() {
-  if (!window.Stripe || stripeElements) return;
-
-  try {
-    stripeInstance = stripeInstance || Stripe(STRIPE_PUBLIC_KEY);
-    stripeElements = stripeInstance.elements();
-
-    const container = document.getElementById("stripe-card-container");
-    if (!container) return;
-
-    container.innerHTML = '<div id="card-element"></div><div id="card-errors" style="color:red;margin-top:10px;"></div>';
-    if (cardElement) { try { cardElement.unmount(); } catch(e){} }
-
-    cardElement = stripeElements.create("card");
-    cardElement.mount("#card-element");
-  } catch (e) {
-    console.error("Stripe mount failed:", e);
-  }
-}
-
-setTimeout(() => {
-  try { mountStripeElements(); } catch(e){}
-}, 1000);
-
-
-function forceMountStripeCard(){
-  const container = document.getElementById("stripe-card-container");
-  if (!container || !window.Stripe) return;
-
-  try {
-    stripeInstance = stripeInstance || Stripe(STRIPE_PUBLIC_KEY);
-    stripeElements = stripeElements || stripeInstance.elements();
-
-    if (!document.getElementById("card-element")) {
-      container.innerHTML = '<div id="card-element"></div><div id="card-errors"></div>';
-      cardElement = stripeElements.create("card");
-      cardElement.mount("#card-element");
-    }
-  } catch(e){
-    console.error("Stripe mount error:", e);
-  }
-}
-
-setInterval(forceMountStripeCard, 1000);
-
 
 function observeStripeContainer() {
   const container = document.getElementById("stripe-card-container");
@@ -2064,12 +2019,11 @@ function observeStripeContainer() {
     stripeInstance = stripeInstance || Stripe(STRIPE_PUBLIC_KEY);
     stripeElements = stripeElements || stripeInstance.elements();
 
-    if (!document.getElementById("card-element")) {
+    if (!cardElement) {
       container.innerHTML = '<div id="card-element"></div><div id="card-errors"></div>';
-      if (cardElement) {
-        try { cardElement.destroy(); } catch(e){}
-      }
-      cardElement = stripeElements.create("card");
+      cardElement = stripeElements.create("card", {
+        hidePostalCode: true
+      });
       cardElement.mount("#card-element");
     }
   } catch (e) {
@@ -2078,12 +2032,13 @@ function observeStripeContainer() {
 }
 
 new MutationObserver(() => {
-  observeStripeContainer();
+  if (document.getElementById("stripe-card-container") && !document.getElementById("card-element")) {
+    cardElement = null;
+    observeStripeContainer();
+  }
 }).observe(document.body, {
   childList: true,
   subtree: true
 });
 
-setTimeout(observeStripeContainer, 100);
-setTimeout(observeStripeContainer, 500);
-setTimeout(observeStripeContainer, 1000);
+setTimeout(observeStripeContainer, 300);
