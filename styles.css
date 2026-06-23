@@ -1060,3 +1060,11 @@ border:1px solid #000;background:#fff;color:#000;
   text-align:center !important;
   width:100%;
 }
+
+
+#card-element{
+  background:#fff;
+  padding:14px;
+  border:1px solid #d8d8d8;
+  border-radius:10px;
+}
