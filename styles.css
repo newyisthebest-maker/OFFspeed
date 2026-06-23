@@ -728,3 +728,22 @@ border:1px solid #000;background:#fff;color:#000;
   max-width:180px !important;
   max-height:180px !important;
 }
+
+
+/* Admin uploader arrows */
+[data-upload-prev], [data-upload-next]{
+  width:42px;
+  height:42px;
+  border:none;
+  border-radius:999px;
+  background:#fff;
+  color:#111;
+  font-size:24px;
+  font-weight:700;
+  box-shadow:0 4px 14px rgba(0,0,0,.18);
+  cursor:pointer;
+}
+[data-image-slot-label]{
+  font-size:16px;
+  font-weight:700;
+}
