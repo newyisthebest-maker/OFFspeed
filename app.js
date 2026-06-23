@@ -2033,3 +2033,24 @@ function mountStripeElements() {
 setTimeout(() => {
   try { mountStripeElements(); } catch(e){}
 }, 1000);
+
+
+function forceMountStripeCard(){
+  const container = document.getElementById("stripe-card-container");
+  if (!container || !window.Stripe) return;
+
+  try {
+    stripeInstance = stripeInstance || Stripe(STRIPE_PUBLIC_KEY);
+    stripeElements = stripeElements || stripeInstance.elements();
+
+    if (!document.getElementById("card-element")) {
+      container.innerHTML = '<div id="card-element"></div><div id="card-errors"></div>';
+      cardElement = stripeElements.create("card");
+      cardElement.mount("#card-element");
+    }
+  } catch(e){
+    console.error("Stripe mount error:", e);
+  }
+}
+
+setInterval(forceMountStripeCard, 1000);
