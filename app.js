@@ -48,7 +48,6 @@ async function removeDeveloperEmail(email) {
 const OWNER_EMAIL = "newyisthebest@gmail.com";
 const TAX_RATE = 0.0825;
 const ADMIN_EMAIL = "treyhartle695@gmail.com";
-const ADMIN_CODE = "10BSBL";
 const CATEGORIES = ["Shirts", "Shorts", "Pants", "Hoodies"];
 
 const STORE_KEY = "offspeed_baseball_store_v2";
@@ -360,7 +359,7 @@ function restoreFocus(selector) {
 function isDeveloper() {
   return Boolean(
     window.state.developerUnlocked ||
-      window.state.user?.email?.toLowerCase() === ADMIN_EMAIL
+      window.state.user?.email?.toLowerCase() === ADMIN_EMAIL || window.state.user?.email?.toLowerCase() === OWNER_EMAIL
   );
 }
 
@@ -521,8 +520,13 @@ function renderMenu(developer) {
       <section class="menu-section">
         <h3>Settings</h3>
         <div class="stack">
-          <input class="input" data-secret-code placeholder="Secret code" />
-          <button class="ghost" type="button" data-action="apply-code">Apply</button>
+          ${
+            developer
+              ? `<input class="input" data-dev-email placeholder="Developer email" />
+                 <button class="ghost" type="button" data-action="add-dev-email">Add Developer</button>
+                 <button class="ghost" type="button" data-action="remove-dev-email">Remove Developer</button>`
+              : ""
+          }
           <div class="small meta">${
             developer ? "Developer mode active" : "Customer mode"
           }</div>
@@ -1192,24 +1196,36 @@ function bindEvents() {
       });
     });
   document
-    .querySelector("[data-action='apply-code']")
-    ?.addEventListener("click", () => {
-      const code = document
-        .querySelector("[data-secret-code]")
-        ?.value.trim()
-        .toUpperCase();
-      const accepted = code === ADMIN_CODE;
-      setState({
-        developerUnlocked: accepted || window.state.developerUnlocked,
-        toast: accepted ? "Dev mode active" : "Code invalid",
-      });
-      clearToast();
-    });
-  document
     .querySelector("[data-action='exit-dev']")
     ?.addEventListener("click", () =>
-      setState({ developerUnlocked: false, toast: "Dev mode off" })
+      setState({ developerUnlocked: false, toast: "You must reset the site to gain developer access again" })
     );
+  
+  document
+    .querySelector("[data-action='add-dev-email']")
+    ?.addEventListener("click", async () => {
+      const email = document.querySelector("[data-dev-email]")?.value.trim().toLowerCase();
+      if (!email || email === OWNER_EMAIL) return;
+      const fb = window.firebaseServices;
+      if (fb?.db) {
+        await fb.setDoc(fb.doc(fb.db,"developerEmails",email), { addedAt: Date.now() });
+        setState({ toast: "Developer added" });
+        clearToast();
+      }
+    });
+  document
+    .querySelector("[data-action='remove-dev-email']")
+    ?.addEventListener("click", async () => {
+      const email = document.querySelector("[data-dev-email]")?.value.trim().toLowerCase();
+      if (!email || email === OWNER_EMAIL) return;
+      const fb = window.firebaseServices;
+      if (fb?.db) {
+        await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email));
+        setState({ toast: "Developer removed" });
+        clearToast();
+      }
+    });
+
   document
     .querySelector("[data-action='login']")
     ?.addEventListener("click", login);
@@ -1395,10 +1411,21 @@ async function login() {
 
     upsertCustomer(email, name);
 
+    const owner = email === OWNER_EMAIL;
+    let extraDev = false;
+    try {
+      const fb = window.firebaseServices;
+      if (fb?.db && !owner) {
+        const snap = await fb.getDoc(fb.doc(fb.db,"developerEmails",email));
+        extraDev = snap.exists();
+      }
+    } catch(e){ console.error(e); }
+
     setState({
       user: { email, name },
+      developerUnlocked: owner || extraDev,
       menuOpen: false,
-      toast: "Signed in",
+      toast: owner || extraDev ? "Developer mode active" : "Signed in",
     });
     clearToast();
   } catch (err) {
