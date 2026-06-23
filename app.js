@@ -97,6 +97,7 @@ const defaultState = {
     fileName: "",
   },
   adminDiscountEditIndex: null,
+  developerEmails: [],
   openOrderId: null,
   toast: "",
 };
@@ -476,7 +477,7 @@ function render() {
             )}</div>`
           : ""
       }
-      
+      ${developer ? `<button class="cloud-save-btn" type="button" data-action="cloud-save">💾 Save to Cloud</button>` : ""}
     </div>
   `;
   bindEvents();
@@ -517,7 +518,19 @@ function renderMenu(developer) {
             .join("")}
         </div>
       </section>
-      <section class="menu-section"><h3>Account</h3>
+      <section class="menu-section">
+        <h3>Settings</h3>
+        <div class="stack">
+          <div class="small meta">${ developer ? "Developer mode active" : "Customer mode" }</div>
+          ${
+            developer && window.state.user?.email?.toLowerCase() !== OWNER_EMAIL
+              ? `<button class="ghost" type="button" data-action="exit-dev">Exit Dev Mode</button>`
+              : ""
+          }
+        </div>
+      </section>
+      <section class="menu-section">
+        <h3>Account</h3>
         ${renderAccount()}
       </section>
     </aside>
@@ -838,12 +851,12 @@ function renderAdmin() {
         <button class="primary" type="submit">Publish Listing</button>
       </form>
       <div class="dashboard-grid">
-        ${renderDeveloperPanel ? renderDeveloperPanel() : ""}
         ${renderPaymentPanel()}
         ${renderTransactionsPanel()}
         ${renderDiscountCodesPanel()}
         ${renderCustomersPanel()}
         ${renderOrdersPanel()}
+        ${renderDeveloperPanel()}
       </div>
     </div>
   `;
@@ -851,20 +864,14 @@ function renderAdmin() {
 
 
 function renderDeveloperPanel() {
-  const owner = window.state.user?.email?.toLowerCase() === OWNER_EMAIL;
-  return `<section class="panel stack">
-    <h3 class="panel-title">Developer Management</h3>
-    <label class="label">Developer Gmail
-      <input class="input" placeholder="name@gmail.com" data-dev-email />
-    </label>
-    <div class="row">
-      <button class="primary" type="button">Add Developer</button>
-      <button class="ghost" type="button">Remove Developer</button>
-    </div>
-    ${!owner ? '<button class="ghost" type="button" data-action="exit-dev">Exit Dev Mode</button>' : ''}
-  </section>`;
+ const emails=(window.state.developerEmails||[]).filter(e=>e!==OWNER_EMAIL);
+ return `
+ <section class="panel stack dev-panel">
+ <h3 class="panel-title">Developer Access</h3>
+ <div class="dev-manage-row"><input class="input" data-dev-email placeholder="gmail@example.com"><button class="primary" type="button" data-action="add-dev-email">Add Developer</button></div>
+ <div class="dev-list">${emails.length?emails.map(e=>`<button type="button" class="ghost dev-email-item" data-remove-dev="${e}">${e} ✕</button>`).join(''):'<div class="meta">No extra developers</div>'}</div>
+ </section>`;
 }
-
 
 function renderPaymentPanel() {
   const settings = window.store.paymentSettings;
@@ -1206,7 +1213,7 @@ function bindEvents() {
       const fb = window.firebaseServices;
       if (fb?.db) {
         await fb.setDoc(fb.doc(fb.db,"developerEmails",email), { addedAt: Date.now() });
-        setState({ toast: "Developer added" });
+        loadDeveloperEmails(); setState({ toast: "Developer added" });
         clearToast();
       }
     });
@@ -1218,10 +1225,12 @@ function bindEvents() {
       const fb = window.firebaseServices;
       if (fb?.db) {
         await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email));
-        setState({ toast: "Developer removed" });
+        loadDeveloperEmails(); setState({ toast: "Developer removed" });
         clearToast();
       }
     });
+
+  document.querySelectorAll("[data-remove-dev]").forEach(btn=>btn.addEventListener("click", async ()=>{ const email=btn.dataset.removeDev; const fb=window.firebaseServices; if(fb?.db){ await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email)); loadDeveloperEmails(); setState({toast:"Developer removed"});}}));
 
   document
     .querySelector("[data-action='login']")
@@ -1501,6 +1510,7 @@ function handleDiscountForm(e) {
   setState({
     toast: idx !== null ? "Discount updated" : "Discount added",
     adminDiscountEditIndex: null,
+  developerEmails: [],
   });
   clearToast();
   e.target.reset();
@@ -1627,6 +1637,12 @@ function deleteProduct(productId) {
   clearToast();
 }
 
+
+async function loadDeveloperEmails(){
+ const fb=window.firebaseServices; if(!fb?.db || !fb.getDocs) return;
+ try{ const snap=await fb.getDocs(fb.collection(fb.db,'developerEmails')); const emails=[]; snap.forEach(d=>emails.push(d.id)); setState({developerEmails: emails.sort()}); }catch(e){console.error(e);}
+}
+
 window.addEventListener("load", () => {
   const wait = setInterval(() => {
     const fb = window.firebaseServices;
@@ -1634,6 +1650,7 @@ window.addEventListener("load", () => {
     clearInterval(wait);
     fb.onAuthStateChanged(fb.auth, (user) => {
       if (user) {
+        loadDeveloperEmails();
         setState({
           user: {
             email: (user.email || "").toLowerCase(),
