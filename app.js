@@ -441,10 +441,10 @@ function navButton(view, label) {
 }
 
 function renderMenu(developer) {
+  const openClass = window.state.menuOpen ? "open" : "";
   return `
-    <div class="menu-overlay ${window.state.menuOpen ? "open" : ""}">
-      <div class="menu-backdrop" data-action="toggle-menu"></div>
-      <aside class="menu ${window.state.menuOpen ? "open" : ""}" aria-label="Menu">
+    <div class="menu-backdrop ${openClass}" data-action="toggle-menu"></div>
+    <aside class="menu ${openClass}" aria-label="Menu">
       <div class="menu-head">
         <h2>Menu</h2>
         <button class="icon-button" type="button" data-action="toggle-menu" aria-label="Close menu">&times;</button>
@@ -490,7 +490,6 @@ function renderMenu(developer) {
         ${renderAccount()}
       </section>
     </aside>
-    </div>
   `;
 }
 
@@ -766,7 +765,6 @@ function renderSummary(details, showCheckoutButton) {
           : ""
       }
     </aside>
-    </div>
   `;
 }
 
