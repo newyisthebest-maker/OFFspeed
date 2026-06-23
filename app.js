@@ -282,7 +282,8 @@ async function save() {
 
     // Prevent startup from overwriting Firestore with an empty store.
     if (fb?.db && window.firebaseLoaded) {
-      const storeSize = new Blob([JSON.stringify(window.store)]).size;
+      const cloudStore = buildCloudStore();
+      const storeSize = new Blob([JSON.stringify(cloudStore)]).size;
 
       if (storeSize > 900000) {
         const msg = "⚠️ Store is getting too large for Firebase. Try using smaller images or removing old products.";
@@ -294,7 +295,7 @@ async function save() {
 
       await fb.setDoc(
         fb.doc(fb.db, "stores", "main"),
-        window.store
+        cloudStore
       );
       await syncProductsToCloud();
     }
@@ -313,14 +314,15 @@ async function forceCloudSave() {
     return;
   }
   try {
-    const storeSize = new Blob([JSON.stringify(window.store)]).size;
+    const cloudStore = buildCloudStore();
+      const storeSize = new Blob([JSON.stringify(cloudStore)]).size;
     if (storeSize > 900000) {
       setState({ toast: "⚠️ Store is too large for Firebase. Use smaller images or remove products." });
       clearToast();
       return;
     }
 
-    await fb.setDoc(fb.doc(fb.db, "stores", "main"), window.store);
+    await fb.setDoc(fb.doc(fb.db, "stores", "main"), buildCloudStore());
     setState({ toast: "✅ Saved to Cloud" });
   } catch (e) {
     console.error(e);
@@ -1485,7 +1487,7 @@ async function publishListing(e) {
   try {
     const fb = window.firebaseServices;
     if (fb?.db) {
-      await fb.setDoc(fb.doc(fb.db, "stores", "main"), window.store);
+      await fb.setDoc(fb.doc(fb.db, "stores", "main"), buildCloudStore());
     }
   } catch (err) {
     console.error("Product cloud save failed:", err);
@@ -1912,3 +1914,14 @@ window.prevImageSlot = function () {
     label.textContent = 'Editing: ' + (window.OFFspeedImageSlot === 0 ? 'Main Image' : 'Image ' + (window.OFFspeedImageSlot + 1));
   }
 };
+function buildCloudStore() {
+  return {
+    discountCodes: window.store.discountCodes || [],
+    customers: window.store.customers || [],
+    paymentSettings: window.store.paymentSettings || {},
+    paymentTransactions: window.store.paymentTransactions || [],
+    orders: window.store.orders || []
+  };
+}
+
+
