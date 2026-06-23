@@ -738,9 +738,9 @@ function renderProductDetail(developer) {
   return `
     <section class="detail">
       <div class="card-figure detail-figure">
-      <button type="button" data-gallery-prev>&lt;</button>
+      <button type="button" class="shopping-gallery-arrow shopping-gallery-arrow-left" data-gallery-prev>&lt;</button>
       <div data-gallery-image>${productFigure({...product,image:((product.images&&product.images.length?product.images[window.state.currentProductImageIndex||0]:product.image)||product.image)})}</div>
-      <button type="button" data-gallery-next>&gt;</button>
+      <button type="button" class="shopping-gallery-arrow shopping-gallery-arrow-right" data-gallery-next>&gt;</button>
       </div>
       <div class="detail-body">
         <button class="ghost" type="button" data-action="back-shopping">Back</button>
