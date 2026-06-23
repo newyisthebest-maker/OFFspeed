@@ -1641,7 +1641,7 @@ function deleteProduct(productId) {
 
 let devEmailUnsubscribe = null;
 
-async async function loadDeveloperEmails(){
+async function loadDeveloperEmails(){
   try{
     const fb = window.firebaseServices;
     if (!fb?.db || !fb?.collection || !fb?.getDocs) {
@@ -1744,5 +1744,4 @@ document.addEventListener('input', (e) => {
     setTimeout(() => window.updateSearchSuggestions(), 0);
   }
 });
-
 
