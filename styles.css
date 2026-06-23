@@ -874,3 +874,40 @@ border:1px solid #000;background:#fff;color:#000;
   justify-content:center !important;
   line-height:1 !important;
 }
+
+
+/* Simple black chevron arrows */
+.gallery-arrow,
+[data-upload-prev],
+[data-upload-next],
+.image-slot-nav button,
+.admin-image-nav button {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+}
+
+.gallery-arrow::before,
+[data-upload-prev]::before,
+[data-upload-next]::before,
+.image-slot-nav button::before,
+.admin-image-nav button::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  border-top: 6px solid #000;
+  border-right: 6px solid #000;
+  display: block;
+}
+
+.gallery-arrow.left::before,
+[data-upload-prev]::before {
+  transform: rotate(-135deg);
+}
+
+.gallery-arrow.right::before,
+[data-upload-next]::before {
+  transform: rotate(45deg);
+}
