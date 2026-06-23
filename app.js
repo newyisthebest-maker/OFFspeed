@@ -1469,7 +1469,7 @@ async function login() {
   }
 }
 
-async async function publishListing(e) {
+async function publishListing(e) {
   e.preventDefault();
   const form = window.state.adminForm;
   const product = {
