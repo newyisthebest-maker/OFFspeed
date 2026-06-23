@@ -1,4 +1,20 @@
 
+// Stripe setup (next phase)
+const STRIPE_PUBLIC_KEY = "pk_test_51Tkz1SJvlNvMA2aVSGBfcGrN78d8EAuU6IVSKojvDxGD3TZc9ezkFRwH8YT9GU1WDbaSj92NDGlv3X1p8wxNFIW4009Ht83PKN";
+let stripeInstance = null;
+
+function initStripeCheckout(){
+  if (!window.Stripe || stripeInstance) return;
+  stripeInstance = Stripe(STRIPE_PUBLIC_KEY);
+  const container = document.getElementById("stripe-card-container");
+  if (container) {
+    container.innerHTML =
+      "Stripe card fields will be connected in the next patch.";
+  }
+}
+
+
+
 async function isDeveloperEmail(email) {
   email = (email || "").toLowerCase();
   if (email === OWNER_EMAIL) return true;
@@ -1967,3 +1983,6 @@ function buildCloudStore() {
 }
 
 
+
+
+setTimeout(() => { try { initStripeCheckout(); } catch(e){} }, 500);
