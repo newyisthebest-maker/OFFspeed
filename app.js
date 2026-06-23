@@ -1970,37 +1970,20 @@ function buildCloudStore() {
 
 
 
-// ===== OFFspeed Stripe Starter =====
-let stripe = null;
-let stripeElements = null;
-let stripeCard = null;
+window.mountStripeCardField = function(publishableKey){
+  const container = document.getElementById('card-element');
+  if (!container || !window.Stripe) return false;
 
-async function startStripePayment(amountInCents) {
-  const response = await fetch(
-    "https://offspeed-stripe-server.onrender.com/create-payment-intent",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: amountInCents })
-    }
-  );
-  return response.json();
-}
+  if (!window._offspeedStripe) {
+    window._offspeedStripe = Stripe(publishableKey);
+    window._offspeedElements = window._offspeedStripe.elements();
+  }
 
-window.initializeStripeCheckout = function (publishableKey) {
-  if (!window.Stripe) return false;
-  if (stripeCard) return true;
-
-  stripe = Stripe(publishableKey);
-  stripeElements = stripe.elements();
-
-  const container = document.getElementById("card-element");
-  if (!container) return false;
-
-  stripeCard = stripeElements.create("card", {
-    hidePostalCode: true
-  });
-  stripeCard.mount("#card-element");
+  if (!window._offspeedCard) {
+    window._offspeedCard = window._offspeedElements.create('card', {
+      hidePostalCode: true
+    });
+    window._offspeedCard.mount('#card-element');
+  }
   return true;
 };
-// ===== End OFFspeed Stripe Starter =====
