@@ -569,3 +569,5 @@ button:disabled {
 }
 
 .cloud-save-btn{position:fixed;bottom:20px;right:20px;z-index:9999;padding:12px 16px;border-radius:999px;border:none;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+
+mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
