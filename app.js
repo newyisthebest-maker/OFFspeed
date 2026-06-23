@@ -833,11 +833,11 @@ function renderAdmin() {
           <div class="dropzone" data-dropzone style="cursor: pointer;">
             ${
               (window.state.adminForm.images?.[window.state.adminForm.uploadSlot || 0])
-                ? `<img class="preview" src="${window.state.adminForm.images[window.state.adminForm.uploadSlot || 0]}" alt="Product upload preview" style="max-width: 180px; max-height:180px;" /><div>${(window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1)}</div>`
-                : `Click to upload ${((window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1))}`
+                ? `<img class="preview" src="${window.state.adminForm.images[window.state.adminForm.uploadSlot || 0]}" alt="Product upload preview" style="max-width: 180px; max-height:180px;" /><div>${((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) === 0 ? "Main Image" : "Image " + (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0)+1)}</div>`
+                : `Click to upload ${(((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) === 0 ? "Main Image" : "Image " + (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0)+1))}`
             }
             <input type="file" data-file-input accept="image/*" hidden />
-          <div data-image-slot-label style="margin-top:8px;font-weight:700;text-align:center;">Editing: ${((window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1))}</div>
+          <div data-image-slot-label style="margin-top:8px;font-weight:700;text-align:center;">Editing: ${(((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) === 0 ? "Main Image" : "Image " + (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0)+1))}</div>
           </div>
           <button type="button" class="gallery-arrow right" data-upload-next>&gt;</button>
         </div>
@@ -1209,11 +1209,11 @@ const dropzone = document.querySelector("[data-dropzone]");
   });
 
   document.querySelector("[data-upload-prev]")?.addEventListener("click", () => {
-    const slot = ((window.state.adminForm.uploadSlot || 0) + 4) % 5;
+    const slot = (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) + 4) % 5;
     setNested("adminForm", { uploadSlot: slot });
   });
   document.querySelector("[data-upload-next]")?.addEventListener("click", () => {
-    const slot = ((window.state.adminForm.uploadSlot || 0) + 1) % 5;
+    const slot = (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) + 1) % 5;
     setNested("adminForm", { uploadSlot: slot });
   });
 
