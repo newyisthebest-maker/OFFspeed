@@ -799,7 +799,27 @@ function renderCheckout() {
     <section class="hero-strip">
       <h2>Checkout</h2>
     </section>
-    <div class="empty">Set up stripe</div>
+
+    <div class="checkout-form">
+      <h3>Shipping Information</h3>
+
+      <input class="input" placeholder="Full Name">
+      <input class="input" placeholder="Email">
+      <input class="input" placeholder="Address">
+      <input class="input" placeholder="City">
+      <input class="input" placeholder="State">
+      <input class="input" placeholder="ZIP Code">
+
+      <h3>Payment Information</h3>
+      <div class="empty">
+        Stripe integration server is ready.<br>
+        Next step: connect Stripe Elements and payment processing.
+      </div>
+
+      <button class="primary-btn" disabled>
+        Purchase (Coming Soon)
+      </button>
+    </div>
   `;
 }
 
