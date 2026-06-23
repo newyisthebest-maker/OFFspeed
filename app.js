@@ -173,13 +173,14 @@ async function initFirebaseSync() {
       window.store = {
         ...structuredClone(starterData),
         ...docSnap.data(),
-        products: Array.isArray(docSnap.data()?.products) ? docSnap.data().products : [],
+        products: window.store.products || [],
       };
       render();
     }
   });
 
   await loadProductsFromCloud();
+  if (typeof loadDeveloperEmails === "function") await loadDeveloperEmails();
   window.firebaseLoaded = true;
   render();
 }
