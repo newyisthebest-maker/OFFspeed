@@ -1720,11 +1720,30 @@ function removeSale(productId) {
   clearToast();
 }
 
-function deleteProduct(productId) {
+async function deleteProduct(productId) {
   if (!confirm("Are you sure?")) return;
+
+  const product = window.store.products.find((p) => p.id === productId);
+
+  try {
+    const fb = window.firebaseServices;
+
+    if (fb?.db && fb?.deleteDoc && fb?.doc) {
+      await fb.deleteDoc(
+        fb.doc(fb.db, "stores", "main", "products", productId)
+      );
+    }
+  } catch (err) {
+    console.error("Failed deleting product from cloud:", err);
+  }
+
   window.store.products = window.store.products.filter((p) => p.id !== productId);
   save();
-  setState({ selectedProductId: "", view: "shopping", toast: "Product deleted" });
+  setState({
+    selectedProductId: "",
+    view: "shopping",
+    toast: "Product deleted"
+  });
   clearToast();
 }
 
