@@ -833,10 +833,11 @@ function renderAdmin() {
           <div class="dropzone" data-dropzone style="cursor: pointer;">
             ${
               (window.state.adminForm.images?.[window.state.adminForm.uploadSlot || 0])
-                ? `<img class="preview" src="${window.state.adminForm.images[window.state.adminForm.uploadSlot || 0]}" alt="Product upload preview" style="max-width: 100px;" /><div>${(window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1)}</div>`
+                ? `<img class="preview" src="${window.state.adminForm.images[window.state.adminForm.uploadSlot || 0]}" alt="Product upload preview" style="max-width: 180px; max-height:180px;" /><div>${(window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1)}</div>`
                 : `Click to upload ${((window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1))}`
             }
             <input type="file" data-file-input accept="image/*" hidden />
+          <div data-image-slot-label style="margin-top:8px;font-weight:700;text-align:center;">Editing: ${((window.state.adminForm.uploadSlot || 0) === 0 ? "Main Image" : "Image " + ((window.state.adminForm.uploadSlot || 0)+1))}</div>
           </div>
           <button type="button" class="gallery-arrow right" data-upload-next>&gt;</button>
         </div>
@@ -1882,12 +1883,13 @@ window.OFFspeedMaxImages = 5;
 window.nextImageSlot = function () {
   window.OFFspeedImageSlot =
     (window.OFFspeedImageSlot + 1) % window.OFFspeedMaxImages;
+  if (window.state && window.state.adminForm) {
+    window.state.adminForm.uploadSlot = window.OFFspeedImageSlot;
+    if (window.renderApp) window.renderApp();
+  }
   const label = document.querySelector('[data-image-slot-label]');
   if (label) {
-    label.textContent =
-      window.OFFspeedImageSlot === 0
-        ? 'Main Image'
-        : 'Image ' + (window.OFFspeedImageSlot + 1);
+    label.textContent = 'Editing: ' + (window.OFFspeedImageSlot === 0 ? 'Main Image' : 'Image ' + (window.OFFspeedImageSlot + 1));
   }
 };
 
@@ -1895,11 +1897,12 @@ window.prevImageSlot = function () {
   window.OFFspeedImageSlot =
     (window.OFFspeedImageSlot - 1 + window.OFFspeedMaxImages) %
     window.OFFspeedMaxImages;
+  if (window.state && window.state.adminForm) {
+    window.state.adminForm.uploadSlot = window.OFFspeedImageSlot;
+    if (window.renderApp) window.renderApp();
+  }
   const label = document.querySelector('[data-image-slot-label]');
   if (label) {
-    label.textContent =
-      window.OFFspeedImageSlot === 0
-        ? 'Main Image'
-        : 'Image ' + (window.OFFspeedImageSlot + 1);
+    label.textContent = 'Editing: ' + (window.OFFspeedImageSlot === 0 ? 'Main Image' : 'Image ' + (window.OFFspeedImageSlot + 1));
   }
 };
