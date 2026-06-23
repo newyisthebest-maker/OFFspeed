@@ -576,3 +576,30 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
 .search-suggestion{padding:10px;cursor:pointer}
 .search-suggestion:hover{background:#222}
 .search-hit{outline:3px solid #ffd54a}
+
+
+.menu-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .3s ease;
+  z-index:9998;
+}
+.menu-overlay.open{
+  opacity:1;
+  pointer-events:auto;
+}
+#sideMenu,.side-menu,.menu-panel{
+  position:fixed;
+  top:0;
+  left:0;
+  height:100vh;
+  transform:translateX(-100%);
+  transition:transform .3s ease;
+  z-index:9999;
+}
+#sideMenu.open,.side-menu.open,.menu-panel.open{
+  transform:translateX(0);
+}
