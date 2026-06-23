@@ -828,6 +828,17 @@ function renderCheckout() {
       </button>
     </div>
   `;
+
+
+  requestAnimationFrame(() => {
+    try {
+      if (typeof observeStripeContainer === "function") {
+        observeStripeContainer();
+      }
+    } catch (e) {
+      console.error("Stripe remount error:", e);
+    }
+  });
 }
 
 function renderSummary(details, showCheckoutButton) {
