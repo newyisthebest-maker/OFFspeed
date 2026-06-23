@@ -1986,3 +1986,33 @@ function buildCloudStore() {
 
 
 setTimeout(() => { try { initStripeCheckout(); } catch(e){} }, 500);
+
+
+
+// Payment skeleton (does not change existing functionality)
+async function startStripePayment(amountInCents) {
+  try {
+    const res = await fetch(
+      "https://offspeed-stripe-server.onrender.com/create-payment-intent",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amount: amountInCents
+        })
+      }
+    );
+
+    const data = await res.json();
+    console.log("Payment intent created:", data);
+
+    alert(
+      "Stripe backend connected successfully. The next patch will add the real card fields and payment confirmation."
+    );
+  } catch (err) {
+    console.error(err);
+    alert("Unable to contact Stripe server.");
+  }
+}
