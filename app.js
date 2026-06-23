@@ -1,3 +1,51 @@
+
+async function isDeveloperEmail(email) {
+  email = (email || "").toLowerCase();
+  if (email === OWNER_EMAIL) return true;
+
+  try {
+    const fb = window.firebaseServices;
+    if (!fb?.db) return false;
+
+    const snap = await fb.getDoc(
+      fb.doc(fb.db, "developerEmails", email)
+    );
+
+    return snap.exists();
+  } catch (e) {
+    console.error("Developer check failed:", e);
+    return false;
+  }
+}
+
+async function addDeveloperEmail(email) {
+  const fb = window.firebaseServices;
+  if (!fb?.db) return;
+
+  email = email.trim().toLowerCase();
+  if (!email || email === OWNER_EMAIL) return;
+
+  await fb.setDoc(
+    fb.doc(fb.db, "developerEmails", email),
+    {
+      addedAt: Date.now()
+    }
+  );
+}
+
+async function removeDeveloperEmail(email) {
+  const fb = window.firebaseServices;
+  if (!fb?.db) return;
+
+  email = email.trim().toLowerCase();
+  if (!email || email === OWNER_EMAIL) return;
+
+  await fb.deleteDoc(
+    fb.doc(fb.db, "developerEmails", email)
+  );
+}
+
+const OWNER_EMAIL = "newyisthebest@gmail.com";
 const TAX_RATE = 0.0825;
 const ADMIN_EMAIL = "treyhartle695@gmail.com";
 const ADMIN_CODE = "10BSBL";
