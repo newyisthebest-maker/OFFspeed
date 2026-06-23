@@ -1488,7 +1488,15 @@ async function publishListing(e) {
     return;
   }
 
-  setState({ adminForm: defaultState.adminForm, toast: "Published!" });
+  await loadProductsFromCloud();
+
+  setState({
+    adminForm: defaultState.adminForm,
+    toast: "Published!",
+    view: "shopping",
+    category: "All",
+    query: ""
+  });
   clearToast();
 }
 
