@@ -629,3 +629,36 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
   from{transform:translateX(-100%);}
   to{transform:translateX(0);}
 }
+
+
+/* Right-side drawer patch */
+.menu-overlay{
+  transition:
+    background .32s ease,
+    backdrop-filter .32s ease,
+    opacity .32s ease !important;
+  background: rgba(0,0,0,0);
+  backdrop-filter: blur(0px);
+}
+
+.menu-overlay.open{
+  background: rgba(0,0,0,.45) !important;
+  backdrop-filter: blur(2px);
+}
+
+#sideMenu,
+.side-menu,
+.menu-panel,
+.menu{
+  left: auto !important;
+  right: 0 !important;
+  transform: translateX(100%) !important;
+  transition: transform .32s cubic-bezier(.22,1,.36,1) !important;
+}
+
+#sideMenu.open,
+.side-menu.open,
+.menu-panel.open,
+.menu.open{
+  transform: translateX(0) !important;
+}
