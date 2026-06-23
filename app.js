@@ -3,15 +3,7 @@
 const STRIPE_PUBLIC_KEY = "pk_test_51Tkz1SJvlNvMA2aVSGBfcGrN78d8EAuU6IVSKojvDxGD3TZc9ezkFRwH8YT9GU1WDbaSj92NDGlv3X1p8wxNFIW4009Ht83PKN";
 let stripeInstance = null;
 
-function initStripeCheckout(){
-  if (!window.Stripe || stripeInstance) return;
-  stripeInstance = Stripe(STRIPE_PUBLIC_KEY);
-  const container = document.getElementById("stripe-card-container");
-  if (container) {
-    container.innerHTML =
-      "Stripe card fields will be connected in the next patch.";
-  }
-}
+function initStripeCheckout(){ return; }
 
 
 
@@ -1985,10 +1977,6 @@ function buildCloudStore() {
 
 
 
-setTimeout(() => { try { initStripeCheckout(); } catch(e){} }, 500);
-
-
-
 // Payment skeleton (does not change existing functionality)
 async function startStripePayment(amountInCents) {
   try {
@@ -2033,6 +2021,7 @@ function mountStripeElements() {
     if (!container) return;
 
     container.innerHTML = '<div id="card-element"></div><div id="card-errors" style="color:red;margin-top:10px;"></div>';
+    if (cardElement) { try { cardElement.unmount(); } catch(e){} }
 
     cardElement = stripeElements.create("card");
     cardElement.mount("#card-element");
