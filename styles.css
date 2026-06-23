@@ -799,3 +799,36 @@ border:1px solid #000;background:#fff;color:#000;
   background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.08);
 }
+
+
+/* Bigger pure white gallery arrows */
+.gallery-arrow,
+.product-arrow,
+.image-arrow,
+.gallery-nav button,
+.product-gallery button {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  color: #000 !important;
+  border: none !important;
+  font-size: 34px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,.30) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.gallery-arrow.left,
+.product-arrow.left,
+.image-arrow.left {
+  left: 16px !important;
+}
+
+.gallery-arrow.right,
+.product-arrow.right,
+.image-arrow.right {
+  right: 16px !important;
+}
