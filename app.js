@@ -80,7 +80,6 @@ const defaultState = {
   cart: [],
   user: null,
   developerUnlocked: false,
-  developerEmails: [],
   checkout: {
     discountCode: "",
     name: "",
@@ -98,6 +97,7 @@ const defaultState = {
     fileName: "",
   },
   adminDiscountEditIndex: null,
+  developerEmails: [],
   openOrderId: null,
   toast: "",
 };
@@ -357,19 +357,6 @@ function restoreFocus(selector) {
   element.focus();
 }
 
-
-async function loadDeveloperEmails() {
-  try {
-    const fb = window.firebaseServices;
-    if (!fb?.db) return;
-    const snap = await fb.getDocs(fb.collection(fb.db, "developerEmails"));
-    const emails = snap.docs.map(d => d.id).sort();
-    setState({ developerEmails: emails });
-  } catch (e) {
-    console.error("Failed loading developer emails:", e);
-  }
-}
-
 function isDeveloper() {
   return Boolean(
     window.state.developerUnlocked ||
@@ -464,7 +451,6 @@ function formatAddress(addr) {
 // --- Render & Core Logic ---
 function render() {
   const developer = isDeveloper();
-  if (developer && !(window.state.developerEmails||[]).length) { loadDeveloperEmails(); }
   window.$app.innerHTML = `
     <div class="shell">
       <header class="topbar">
@@ -535,23 +521,9 @@ function renderMenu(developer) {
       <section class="menu-section">
         <h3>Settings</h3>
         <div class="stack">
+          <div class="small meta">${ developer ? "Developer mode active" : "Customer mode" }</div>
           ${
-            developer
-              ? `<input class="input" data-dev-email placeholder="Developer email" />
-                 <button class="ghost" type="button" data-action="add-dev-email">Add Developer</button>
-                 <div class="small meta">Developer Emails:</div>
-                 <div class="stack">${
-                   (window.state.developerEmails || []).map(email =>
-                     `<button class="ghost" type="button" data-remove-dev="${email}" ${email === OWNER_EMAIL ? "disabled" : ""}>${email}</button>`
-                   ).join("") || "<div class='small meta'>No developer emails saved.</div>"
-                 }</div>`
-              : ""
-          }
-          <div class="small meta">${
-            developer ? "Developer mode active" : "Customer mode"
-          }</div>
-          ${
-            developer
+            developer && window.state.user?.email?.toLowerCase() !== OWNER_EMAIL
               ? `<button class="ghost" type="button" data-action="exit-dev">Exit Dev Mode</button>`
               : ""
           }
@@ -884,9 +856,21 @@ function renderAdmin() {
         ${renderDiscountCodesPanel()}
         ${renderCustomersPanel()}
         ${renderOrdersPanel()}
+        ${renderDeveloperPanel()}
       </div>
     </div>
   `;
+}
+
+
+function renderDeveloperPanel() {
+ const emails=(window.state.developerEmails||[]).filter(e=>e!==OWNER_EMAIL);
+ return `
+ <section class="panel stack dev-panel">
+ <h3 class="panel-title">Developer Access</h3>
+ <div class="dev-manage-row"><input class="input" data-dev-email placeholder="gmail@example.com"><button class="primary" type="button" data-action="add-dev-email">Add Developer</button></div>
+ <div class="dev-list">${emails.length?emails.map(e=>`<button type="button" class="ghost dev-email-item" data-remove-dev="${e}">${e} ✕</button>`).join(''):'<div class="meta">No extra developers</div>'}</div>
+ </section>`;
 }
 
 function renderPaymentPanel() {
@@ -1218,8 +1202,7 @@ function bindEvents() {
   document
     .querySelector("[data-action='exit-dev']")
     ?.addEventListener("click", () =>
-      setState({ developerUnlocked: false,
-  developerEmails: [], toast: "You must reset the site to gain developer access again" })
+      setState({ developerUnlocked: false, toast: "You must reset the site to gain developer access again" })
     );
   
   document
@@ -1230,8 +1213,7 @@ function bindEvents() {
       const fb = window.firebaseServices;
       if (fb?.db) {
         await fb.setDoc(fb.doc(fb.db,"developerEmails",email), { addedAt: Date.now() });
-        await loadDeveloperEmails();
-        setState({ toast: "Developer added" });
+        loadDeveloperEmails(); setState({ toast: "Developer added" });
         clearToast();
       }
     });
@@ -1243,24 +1225,14 @@ function bindEvents() {
       const fb = window.firebaseServices;
       if (fb?.db) {
         await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email));
-        await loadDeveloperEmails();
-        setState({ toast: "Developer removed" });
+        loadDeveloperEmails(); setState({ toast: "Developer removed" });
         clearToast();
       }
     });
 
-  
-  document.querySelectorAll("[data-remove-dev]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const email = btn.dataset.removeDev;
-      if (!email || email === OWNER_EMAIL) return;
-      await removeDeveloperEmail(email);
-      await loadDeveloperEmails();
-      render();
-    });
-  });
+  document.querySelectorAll("[data-remove-dev]").forEach(btn=>btn.addEventListener("click", async ()=>{ const email=btn.dataset.removeDev; const fb=window.firebaseServices; if(fb?.db){ await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email)); loadDeveloperEmails(); setState({toast:"Developer removed"});}}));
 
-document
+  document
     .querySelector("[data-action='login']")
     ?.addEventListener("click", login);
   document
@@ -1275,8 +1247,7 @@ document
       } catch (e) {
         console.error(e);
       }
-      setState({ user: null, developerUnlocked: false,
-  developerEmails: [], view: "shopping" });
+      setState({ user: null, developerUnlocked: false, view: "shopping" });
     });
   document
     .querySelector("[data-action='back-shopping']")
@@ -1459,11 +1430,9 @@ async function login() {
     setState({
       user: { email, name },
       developerUnlocked: owner || extraDev,
-      developerEmails: window.state.developerEmails || [],
       menuOpen: false,
       toast: owner || extraDev ? "Developer mode active" : "Signed in",
     });
-    if (owner || extraDev) await loadDeveloperEmails();
     clearToast();
   } catch (err) {
     console.error(err);
@@ -1541,6 +1510,7 @@ function handleDiscountForm(e) {
   setState({
     toast: idx !== null ? "Discount updated" : "Discount added",
     adminDiscountEditIndex: null,
+  developerEmails: [],
   });
   clearToast();
   e.target.reset();
@@ -1667,18 +1637,48 @@ function deleteProduct(productId) {
   clearToast();
 }
 
+
+
+let devEmailUnsubscribe = null;
+
+async function loadDeveloperEmails(){
+  try{
+    const fb = window.firebaseServices;
+    if (!fb?.db) return;
+
+    if (devEmailUnsubscribe) return;
+
+    devEmailUnsubscribe = fb.onSnapshot(
+      fb.collection(fb.db, 'developerEmails'),
+      (snap) => {
+        const emails = [];
+        snap.forEach(d => emails.push(d.id));
+        setState({ developerEmails: emails.sort() });
+      }
+    );
+  }catch(e){
+    console.error(e);
+  }
+}
+
 window.addEventListener("load", () => {
+
   const wait = setInterval(() => {
     const fb = window.firebaseServices;
     if (!fb?.auth) return;
     clearInterval(wait);
     fb.onAuthStateChanged(fb.auth, (user) => {
       if (user) {
-        setState({
-          user: {
-            email: (user.email || "").toLowerCase(),
-            name: user.displayName || (user.email || "").split("@")[0]
-          }
+        const email = (user.email || '').toLowerCase();
+        loadDeveloperEmails();
+        isDeveloperEmail(email).then((isDev) => {
+          setState({
+            user: {
+              email,
+              name: user.displayName || email.split('@')[0]
+            },
+            developerUnlocked: isDev
+          });
         });
       }
     });
