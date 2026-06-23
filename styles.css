@@ -632,3 +632,7 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
 }
 
 [data-secret-code],[data-action="apply-code"]{display:none!important;}
+
+.dev-tools{display:grid;gap:.5rem;margin-bottom:1rem}.dev-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}.dev-actions button{width:100%}
+
+.dev-manage-row{display:flex;gap:8px;align-items:center}.dev-manage-row .input{flex:1}.dev-list{display:flex;flex-wrap:wrap;gap:8px}.dev-email-item{text-align:left}
