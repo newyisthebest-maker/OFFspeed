@@ -8,6 +8,9 @@ import {
 import {
   getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, addDoc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA7hrdCSBsV6QIS99E70OXvPRzrPLH_lk0",
@@ -22,9 +25,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 window.firebaseServices = {
-  auth, db, GoogleAuthProvider, signInWithPopup,
+  auth, db, storage, ref, uploadBytes, getDownloadURL, GoogleAuthProvider, signInWithPopup,
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   signOut, onAuthStateChanged,
   doc, setDoc, getDoc, onSnapshot, collection, getDocs, addDoc, updateDoc, deleteDoc
