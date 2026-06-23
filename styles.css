@@ -603,3 +603,29 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
 #sideMenu.open,.side-menu.open,.menu-panel.open{
   transform:translateX(0);
 }
+
+
+/* Drawer menu override */
+.menu-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:9998;
+  backdrop-filter:blur(2px);
+}
+
+.menu{
+  position:fixed !important;
+  top:0;
+  left:0;
+  height:100vh;
+  width:min(340px,85vw);
+  z-index:9999;
+  transform:translateX(-100%);
+  animation:slideMenuIn .28s ease forwards;
+}
+
+@keyframes slideMenuIn{
+  from{transform:translateX(-100%);}
+  to{transform:translateX(0);}
+}
