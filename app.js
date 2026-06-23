@@ -1582,3 +1582,52 @@ window.highlightSearchText = function(text, query){
     "<mark>$1</mark>"
   );
 };
+
+
+// Added by ChatGPT: search suggestion dropdown
+window.updateSearchSuggestions = function(){
+  const input = document.querySelector('input[type="search"], #search, .search-input');
+  if (!input) return;
+
+  let box = document.getElementById('searchSuggestions');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'searchSuggestions';
+    box.className = 'search-suggestions';
+    input.parentElement && input.parentElement.appendChild(box);
+  }
+
+  const q = (window.state?.searchQuery || input.value || '').toLowerCase().trim();
+  if (!q) { box.innerHTML = ''; return; }
+
+  const products = window.store?.products || [];
+  const matches = products.filter(p =>
+    (p.name || '').toLowerCase().includes(q)
+  ).slice(0,8);
+
+  box.innerHTML = matches.map(p =>
+    `<div class="search-suggestion" data-id="${p.id}">
+      ${p.name || 'Unnamed Product'}
+    </div>`
+  ).join('');
+
+  box.querySelectorAll('.search-suggestion').forEach(el => {
+    el.onclick = () => {
+      const id = el.dataset.id;
+      const card = document.querySelector(`[data-product-id="${id}"]`);
+      if (card) {
+        card.scrollIntoView({behavior:'smooth', block:'center'});
+        card.classList.add('search-hit');
+        setTimeout(()=>card.classList.remove('search-hit'), 2000);
+      }
+      box.innerHTML = '';
+    };
+  });
+};
+
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.matches('input[type="search"], #search, .search-input')) {
+    setTimeout(() => window.updateSearchSuggestions(), 0);
+  }
+});
