@@ -1851,3 +1851,33 @@ document.addEventListener("click", (e) => {
   const holder = document.querySelector("[data-gallery-image]");
   if (holder) holder.innerHTML = `<img src="${images[window.state.galleryIndex]}" style="max-width:100%;">`;
 });
+
+
+// Developer uploader image slot navigator
+window.OFFspeedImageSlot = 0;
+window.OFFspeedMaxImages = 5;
+
+window.nextImageSlot = function () {
+  window.OFFspeedImageSlot =
+    (window.OFFspeedImageSlot + 1) % window.OFFspeedMaxImages;
+  const label = document.querySelector('[data-image-slot-label]');
+  if (label) {
+    label.textContent =
+      window.OFFspeedImageSlot === 0
+        ? 'Main Image'
+        : 'Image ' + (window.OFFspeedImageSlot + 1);
+  }
+};
+
+window.prevImageSlot = function () {
+  window.OFFspeedImageSlot =
+    (window.OFFspeedImageSlot - 1 + window.OFFspeedMaxImages) %
+    window.OFFspeedMaxImages;
+  const label = document.querySelector('[data-image-slot-label]');
+  if (label) {
+    label.textContent =
+      window.OFFspeedImageSlot === 0
+        ? 'Main Image'
+        : 'Image ' + (window.OFFspeedImageSlot + 1);
+  }
+};
