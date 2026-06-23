@@ -803,6 +803,8 @@ function renderCartLine(line) {
 }
 
 function renderCheckout() {
+  if (window.forceStripeCheckoutMount) window.forceStripeCheckoutMount();
+
   return `
     <section class="hero-strip">
       <h2>Checkout</h2>
@@ -2058,3 +2060,33 @@ new MutationObserver(() => {
 });
 
 setTimeout(observeStripeContainer, 300);
+
+
+window.forceStripeCheckoutMount = function () {
+  setTimeout(() => {
+    try {
+      if (typeof observeStripeContainer === "function") {
+        observeStripeContainer();
+      }
+    } catch (e) {
+      console.error("Stripe remount failed:", e);
+    }
+  }, 50);
+};
+
+
+const checkoutStripeObserver = new MutationObserver(() => {
+  const el = document.getElementById("stripe-card-container");
+  if (el && !document.getElementById("card-element")) {
+    try {
+      if (typeof observeStripeContainer === "function") {
+        observeStripeContainer();
+      }
+    } catch (e) {}
+  }
+});
+
+checkoutStripeObserver.observe(document.body, {
+  childList: true,
+  subtree: true
+});
