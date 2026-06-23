@@ -592,3 +592,41 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
 .search-suggestion{padding:10px;cursor:pointer}
 .search-suggestion:hover{background:#222}
 .search-hit{outline:3px solid #ffd54a}
+
+
+/* Smooth drawer animations */
+.menu {
+  animation: menuSlideOut 0.32s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+.menu.open {
+  animation: menuSlideIn 0.32s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+.menu-backdrop {
+  animation: backdropOut 0.32s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+.menu-backdrop.open {
+  animation: backdropIn 0.32s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+@keyframes menuSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes menuSlideOut {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes backdropOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
