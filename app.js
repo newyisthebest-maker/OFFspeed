@@ -1218,7 +1218,7 @@ function bindEvents() {
       }
     });
 
-  document.querySelectorAll("[data-remove-dev]").forEach(btn=>btn.addEventListener("click", async ()=>{ const email=btn.dataset.removeDev; const fb=window.firebaseServices; if(fb?.db){ await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email)); loadDeveloperEmails(); setState({toast:"Developer removed"});}}));
+  document.querySelectorAll("[data-remove-dev]").forEach(btn=>btn.addEventListener("click", async ()=>{ const email=btn.dataset.removeDev; const fb=window.firebaseServices; if(fb?.db){ await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email)); await loadDeveloperEmails(); if(window.store.user?.email?.toLowerCase()===email?.toLowerCase()){ setState({developerUnlocked:false}); } setState({toast:"Developer removed"}); clearToast();}}));
 
   document
     .querySelector("[data-action='login']")
@@ -1668,6 +1668,8 @@ window.addEventListener("load", () => {
             developerUnlocked: isDev
           });
         });
+      } else {
+        setState({ user: null, developerUnlocked: false });
       }
     });
   }, 250);
@@ -1773,3 +1775,790 @@ document.addEventListener("click", async (e) => {
     }
   }
 });
+
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, addDoc, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA7hrdCSBsV6QIS99E70OXvPRzrPLH_lk0",
+  authDomain: "ofsp-88c9d.firebaseapp.com",
+  projectId: "ofsp-88c9d",
+  storageBucket: "ofsp-88c9d.firebasestorage.app",
+  messagingSenderId: "278239012324",
+  appId: "1:278239012324:web:249cffc214042ea127d3f1",
+  measurementId: "G-1PHVC3ZYWP"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.firebaseServices = {
+  auth, db, GoogleAuthProvider, signInWithPopup,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged,
+  doc, setDoc, getDoc, onSnapshot, collection, getDocs, addDoc, updateDoc, deleteDoc
+};
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offspeed Baseball</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="./app.js"></script>
+  <script type="module" src="./firebase.js"></script>
+</body>
+</html>
+
+# Offspeed Baseball
+
+Minimal black-and-white e-commerce app for a clothing brand.
+
+## Run
+
+Open `index.html` in a browser. No install step is required.
+
+The storefront starts with zero listings. Add products from the hidden Admin tab when you are ready.
+
+## Project Setup
+
+This version is intentionally dependency-free so it stays small and works without paid services. The structure mirrors a React/Firebase/Stripe app:
+
+- `index.html`: app mount point
+- `styles.css`: minimalist black-and-white UI
+- `app.js`: component rendering, state management, auth mock, database mock, cart, checkout, and admin logic
+
+## Database Schema
+
+```js
+{
+  products: [
+    { id, name, price, category, description, image, createdAt }
+  ],
+  customers: [
+    { name, email, createdAt }
+  ],
+  orders: [
+    { id, customerName, customerEmail, items, subtotal, discount, tax, total, createdAt, paymentProvider, paymentStatus, paymentReference, payoutStatus, payoutDestination }
+  ],
+  paymentTransactions: [
+    { id, orderId, amount, subtotal, tax, discount, provider, status, payoutStatus, destination, cardLastFour, createdAt }
+  ],
+  paymentSettings: {
+    provider,
+    destinationName,
+    payoutEmail,
+    stripeAccountId,
+    statementDescriptor
+  ],
+  discountCodes: [
+    { code, type, value, active }
+  ]
+}
+```
+
+The app stores this schema in `localStorage`, which can be replaced with Firestore collections using the same object shapes:
+
+- `products`
+- `customers`
+- `orders`
+- `paymentTransactions`
+- `paymentSettings`
+- `discountCodes`
+
+## App Architecture
+
+```txt
+App Shell
+  Header
+  Navigation: Shopping, Cart, Checkout, Admin when allowed
+  Hamburger Menu
+    Search
+    Category Filters
+    Settings Secret Code
+    Account
+  Shopping View
+    Product Grid
+    Product Detail
+  Cart View
+    Quantity Controls
+    Tax and Total Summary
+  Checkout View
+    Mock Card Form
+    Order Creation
+  Admin Dashboard
+    Metrics
+    Payment Setup
+    Payment Transactions
+    PNG Upload
+    Product Listing Form
+```
+
+## Admin Access
+
+Developer mode activates when:
+
+- the signed-in Gmail is `treyhartle695@gmail.com`
+- or the Settings code is `10BSBL`
+
+## Firebase and Stripe Upgrade Path
+
+Replace the local `store` reads/writes in `app.js` with:
+
+- Firebase Auth `signInWithPopup(new GoogleAuthProvider())`
+- Firestore `products`, `customers`, `orders`, and `discountCodes` collections
+- Stripe Checkout Session creation from a server route
+
+The checkout included here is a functional test payment form. Once Admin saves a payment destination, checkout processes orders as paid, creates a payment transaction, and routes that transaction to the saved destination record. It does not move real money. To accept real payments, connect the same destination settings to a Stripe account and create Checkout Sessions from a server route.
+
+:root {
+  color: #000;
+  background: #fff;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-size: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #fff;
+  color: #000;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: #000;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.shell {
+  min-height: 100vh;
+  background: #fff;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 4rem 1fr 4rem;
+  align-items: center;
+  min-height: 5.25rem;
+  border-bottom: 1px solid #000;
+  background: #fff;
+}
+
+.logo {
+  grid-column: 2;
+  margin: 0;
+  padding: 1.15rem 0;
+  text-align: center;
+  font-size: clamp(1.65rem, 5vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.hamburger {
+  grid-column: 3;
+  width: 4rem;
+  height: 5.25rem;
+  border: 0;
+  border-left: 1px solid #000;
+  background: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.hamburger-lines,
+.hamburger-lines::before,
+.hamburger-lines::after {
+  display: block;
+  width: 1.3rem;
+  height: 2px;
+  background: #000;
+}
+
+.hamburger-lines {
+  position: relative;
+}
+
+.hamburger-lines::before,
+.hamburger-lines::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+
+.hamburger-lines::before {
+  top: -7px;
+}
+
+.hamburger-lines::after {
+  top: 7px;
+}
+
+.nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid #000;
+}
+
+.nav.has-admin {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nav button {
+  min-height: 3rem;
+  border: 0;
+  border-right: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.nav button:last-child {
+  border-right: 0;
+}
+
+.nav .active,
+.nav button:hover,
+.nav button:focus-visible,
+.hamburger:hover,
+.hamburger:focus-visible,
+.primary:hover,
+.primary:focus-visible,
+.ghost:hover,
+.ghost:focus-visible,
+.chip.active,
+.chip:hover,
+.chip:focus-visible {
+  background: #000;
+  color: #fff;
+  outline: 0;
+}
+
+.menu {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 30;
+  width: min(27rem, 85vw);
+  overflow-y: auto;
+  border-left: 1px solid #000;
+  background: #fff;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.menu.open {
+  transform: translateX(0);
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
+}
+
+.menu-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.4rem;
+  border-bottom: 1px solid #000;
+}
+
+.menu-head h2 {
+  margin: 0;
+  padding: 0 1rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.icon-button {
+  width: 3.4rem;
+  height: 3.4rem;
+  border: 0;
+  border-left: 1px solid #000;
+  background: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.menu-section {
+  border-bottom: 1px solid #000;
+  padding: 1rem;
+}
+
+.menu-section h3,
+.panel-title {
+  margin: 0 0 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.between {
+  justify-content: space-between;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: #fff;
+  padding: 0.78rem 0.85rem;
+}
+
+.textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.chip,
+.ghost,
+.primary {
+  min-height: 2.8rem;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.primary {
+  background: #000;
+  color: #fff;
+}
+
+.primary:hover,
+.primary:focus-visible {
+  background: #fff;
+  color: #000;
+}
+
+.main {
+  width: min(1120px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.hero-strip {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #000;
+}
+
+.hero-strip h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 7vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.meta {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: grid;
+  min-height: 26rem;
+  border: 1px solid #000;
+  background: #fff;
+}
+
+.card-figure {
+  position: relative;
+  display: grid;
+  min-height: 15rem;
+  place-items: center;
+  border-bottom: 1px solid #000;
+  overflow: hidden;
+}
+
+.card-figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 1rem;
+  filter: grayscale(1) contrast(1.4);
+}
+
+.card-body {
+  display: grid;
+  align-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.card h3,
+.detail h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+}
+
+.price {
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.small {
+  font-size: 0.86rem;
+}
+
+.muted {
+  color: #000;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr);
+  gap: 1rem;
+  border: 1px solid #000;
+}
+
+.detail-figure {
+  min-height: 25rem;
+  border-right: 1px solid #000;
+}
+
+.detail-body {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  padding: 1rem;
+}
+
+.baseball {
+  width: min(64%, 14rem);
+  aspect-ratio: 1;
+}
+
+.baseball svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cart-lines,
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.cart-line,
+.panel {
+  border: 1px solid #000;
+  background: #fff;
+  padding: 1rem;
+}
+
+.cart-line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+}
+
+.qty {
+  display: inline-grid;
+  grid-template-columns: 2.5rem 2.5rem 2.5rem;
+  border: 1px solid #000;
+}
+
+.qty button,
+.qty span {
+  display: grid;
+  min-height: 2.5rem;
+  place-items: center;
+  border: 0;
+  border-right: 1px solid #000;
+  background: #fff;
+  font-weight: 900;
+}
+
+.qty button:last-child {
+  border-right: 0;
+}
+
+.summary {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid #000;
+  padding: 1rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.total {
+  border-top: 1px solid #000;
+  padding-top: 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.payment-status {
+  border: 1px solid #000;
+  padding: 0.85rem;
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: 1rem;
+  align-items: start;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+  gap: 1rem;
+}
+
+.dropzone {
+  display: grid;
+  min-height: 10rem;
+  place-items: center;
+  border: 2px dashed #000;
+  background: #fff;
+  text-align: center;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dropzone.dragging {
+  background: #000;
+  color: #fff;
+}
+
+.preview {
+  width: 100%;
+  max-height: 12rem;
+  object-fit: contain;
+  border: 1px solid #000;
+}
+
+.table {
+  display: grid;
+  border: 1px solid #000;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+  border-bottom: 1px solid #000;
+  padding: 0.75rem;
+}
+
+.table-row:last-child {
+  border-bottom: 0;
+}
+
+.empty {
+  display: grid;
+  min-height: 14rem;
+  place-items: center;
+  border: 1px solid #000;
+  text-align: center;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 40;
+  max-width: min(22rem, calc(100vw - 2rem));
+  border: 1px solid #000;
+  background: #000;
+  color: #fff;
+  padding: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .main {
+    width: min(100vw - 1rem, 1120px);
+    padding-top: 1rem;
+  }
+
+  .hero-strip,
+  .detail,
+  .checkout-layout,
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-figure {
+    border-right: 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .actions,
+  .chips {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-line {
+    grid-template-columns: 1fr;
+  }
+
+  .table-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cloud-save-btn{position:fixed;bottom:20px;right:20px;z-index:9999;padding:12px 16px;border-radius:999px;border:none;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+
+mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
+
+.search-suggestions{position:absolute;left:0;right:0;top:100%;background:#111;border:1px solid #333;border-radius:8px;max-height:250px;overflow:auto;z-index:9999}
+.search-suggestion{padding:10px;cursor:pointer}
+.search-suggestion:hover{background:#222}
+.search-hit{outline:3px solid #ffd54a}
+
+
+/* Smooth drawer animations */
+.menu {
+  animation: menuSlideOut 0.32s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+.menu.open {
+  animation: menuSlideIn 0.32s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+.menu-backdrop {
+  animation: backdropOut 0.32s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+.menu-backdrop.open {
+  animation: backdropIn 0.32s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+@keyframes menuSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes menuSlideOut {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes backdropOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+[data-secret-code],[data-action="apply-code"]{display:none!important;}
+
+.dev-tools{display:grid;gap:.5rem;margin-bottom:1rem}.dev-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}.dev-actions button{width:100%}
+
+.dev-manage-row{display:flex;gap:8px;align-items:center}.dev-manage-row .input{flex:1}.dev-list{display:flex;flex-wrap:wrap;gap:8px}.dev-email-item{text-align:left}
