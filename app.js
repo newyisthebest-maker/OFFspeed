@@ -875,8 +875,6 @@ function renderAdmin() {
         <button class="primary" type="submit">Publish Listing</button>
       </form>
       <div class="dashboard-grid">
-        ${renderPaymentPanel()}
-        ${renderTransactionsPanel()}
         ${renderDiscountCodesPanel()}
         ${renderCustomersPanel()}
         ${renderOrdersPanel()}
@@ -898,47 +896,11 @@ function renderDeveloperPanel() {
 }
 
 function renderPaymentPanel() {
-  const settings = window.store.paymentSettings;
-  return `
-    <form class="panel stack" data-payment-form>
-      <h3 class="panel-title">Payment Setup</h3>
-      <label class="label">Checkout Mode
-        <select class="select" data-payment="provider" name="provider">
-          <option value="mock" ${
-            settings.provider === "mock" ? "selected" : ""
-          }>Mock Checkout</option>
-          <option value="stripe" ${
-            settings.provider === "stripe" ? "selected" : ""
-          }>Stripe Account</option>
-        </select>
-      </label>
-      <label class="label">Destination Name<input class="input" data-payment="destinationName" name="destinationName" value="${escapeAttr(
-        settings.destinationName
-      )}" /></label>
-      <label class="label">Payout Email<input class="input" data-payment="payoutEmail" name="payoutEmail" value="${escapeAttr(
-        settings.payoutEmail
-      )}" /></label>
-      <label class="label">Stripe Account ID<input class="input" data-payment="stripeAccountId" name="stripeAccountId" value="${escapeAttr(
-        settings.stripeAccountId
-      )}" /></label>
-      <button class="primary" type="submit">Save Payment Setup</button>
-    </form>
-  `;
+  return "";
 }
 
 function renderTransactionsPanel() {
-  const paidTotal = window.store.paymentTransactions.reduce(
-    (sum, trans) => sum + Number(trans.amount || 0),
-    0
-  );
-  return `
-    <section class="panel stack">
-      <h3 class="panel-title">Payments</h3>
-      <div class="meta">${money(paidTotal)} paid / ${
-    window.store.paymentTransactions.length
-  } transactions</div>
-    </section>
-  `;
+  return "";
 }
 
 function renderDiscountCodesPanel() {
