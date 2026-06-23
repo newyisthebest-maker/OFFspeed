@@ -683,3 +683,23 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
   height:40px;
   border-radius:50%;
 }
+
+
+.detail-figure{position:relative;display:flex;align-items:center;justify-content:center;}
+.detail-figure .gallery-arrow{
+position:absolute;
+top:50%;
+transform:translateY(-50%);
+width:42px;height:42px;border-radius:50%;
+border:none;background:rgba(0,0,0,.65);color:#fff;
+font-size:24px;z-index:5;
+}
+.detail-figure .gallery-arrow.left{left:12px;}
+.detail-figure .gallery-arrow.right{right:12px;}
+.uploader-nav{display:flex;align-items:center;gap:12px;}
+.uploader-nav .gallery-arrow{
+position:static;
+transform:none;
+width:42px;height:42px;border-radius:50%;
+border:1px solid #000;background:#fff;color:#000;
+}
