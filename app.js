@@ -1707,3 +1707,11 @@ document.addEventListener('input', (e) => {
     setTimeout(() => window.updateSearchSuggestions(), 0);
   }
 });
+
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('button,a,input,label');
+  if (!el) return;
+  if (el.matches('[data-action="toggle-menu"]')) return;
+  e.stopPropagation();
+}, true);
