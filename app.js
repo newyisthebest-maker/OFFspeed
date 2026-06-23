@@ -832,7 +832,7 @@ function renderAdmin() {
           <button type="button" class="gallery-arrow left" data-upload-prev>&lt;</button>
           <div class="dropzone" data-dropzone style="cursor: pointer;">
             ${
-              (window.state.adminForm.images?.[window.state.adminForm.uploadSlot || 0])
+              (window.state.adminForm.images?.[(typeof window.OFFspeedImageSlot==='number'?window.OFFspeedImageSlot:(window.state.adminForm.uploadSlot||0))])
                 ? `<img class="preview" src="${window.state.adminForm.images[window.state.adminForm.uploadSlot || 0]}" alt="Product upload preview" style="max-width: 180px; max-height:180px;" /><div>${((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) === 0 ? "Main Image" : "Image " + (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0)+1)}</div>`
                 : `Click to upload ${(((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) === 0 ? "Main Image" : "Image " + (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0)+1))}`
             }
@@ -1175,16 +1175,24 @@ function bindEvents() {
   fileInput?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const slot = (typeof window.OFFspeedImageSlot === "number" ? window.OFFspeedImageSlot : (window.state.adminForm.uploadSlot || 0));
+    const slot = (typeof window.OFFspeedImageSlot === "number"
+      ? window.OFFspeedImageSlot
+      : (window.state.adminForm.uploadSlot || 0));
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const images = [...(window.state.adminForm.images || [])];
+
       images[slot] = event.target.result;
+
       setNested("adminForm", {
-        image: images[0] || event.target.result,
         images,
-        fileName: file.name
+        image: images[0] || "",
+        fileName: file.name,
+        uploadSlot: slot
       });
+
+      window.OFFspeedImageSlot = slot;
       render();
     };
     reader.readAsDataURL(file);
@@ -1883,7 +1891,7 @@ window.nextImageSlot = function () {
     (window.OFFspeedImageSlot + 1) % window.OFFspeedMaxImages;
   if (window.state && window.state.adminForm) {
     window.state.adminForm.uploadSlot = window.OFFspeedImageSlot;
-    if (window.renderApp) window.renderApp();
+    render();
   }
   const label = document.querySelector('[data-image-slot-label]');
   if (label) {
@@ -1897,7 +1905,7 @@ window.prevImageSlot = function () {
     window.OFFspeedMaxImages;
   if (window.state && window.state.adminForm) {
     window.state.adminForm.uploadSlot = window.OFFspeedImageSlot;
-    if (window.renderApp) window.renderApp();
+    render();
   }
   const label = document.querySelector('[data-image-slot-label]');
   if (label) {
