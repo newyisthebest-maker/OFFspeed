@@ -630,3 +630,5 @@ mark{background:#ffd54a;color:inherit;padding:0 2px;border-radius:3px;}
   from { opacity: 1; }
   to { opacity: 0; }
 }
+
+[data-secret-code],[data-action="apply-code"]{display:none!important;}
