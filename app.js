@@ -1649,6 +1649,29 @@ async function loadDeveloperEmails(){
   }
 }
 
+
+window.refreshDeveloperStatus = async function(){
+  try{
+    const fb = window.firebaseServices;
+    const user = fb?.auth?.currentUser;
+    if (!user) {
+      setState({ developerUnlocked:false });
+      return;
+    }
+    const email = (user.email || '').toLowerCase();
+    const isDev = await isDeveloperEmail(email);
+    setState({
+      user:{
+        email,
+        name:user.displayName || email.split('@')[0]
+      },
+      developerUnlocked:isDev
+    });
+  }catch(e){
+    console.error('Developer refresh failed:', e);
+  }
+};
+
 window.addEventListener("load", () => {
 
   const wait = setInterval(() => {
@@ -1659,6 +1682,7 @@ window.addEventListener("load", () => {
       if (user) {
         const email = (user.email || '').toLowerCase();
         loadDeveloperEmails();
+        window.refreshDeveloperStatus();
         isDeveloperEmail(email).then((isDev) => {
           setState({
             user: {
@@ -1773,5 +1797,18 @@ document.addEventListener("click", async (e) => {
     } catch (err) {
       console.error("Failed to remove developer:", err);
     }
+  }
+});
+
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && window.refreshDeveloperStatus) {
+    window.refreshDeveloperStatus();
+  }
+});
+
+window.addEventListener('focus', () => {
+  if (window.refreshDeveloperStatus) {
+    window.refreshDeveloperStatus();
   }
 });
