@@ -6,7 +6,7 @@ import {
   signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import {
-  getFirestore, doc, setDoc, getDoc, onSnapshot
+  getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, addDoc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -27,5 +27,5 @@ window.firebaseServices = {
   auth, db, GoogleAuthProvider, signInWithPopup,
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   signOut, onAuthStateChanged,
-  doc, setDoc, getDoc, onSnapshot
+  doc, setDoc, getDoc, onSnapshot, collection, getDocs, addDoc, updateDoc, deleteDoc
 };
