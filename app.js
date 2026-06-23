@@ -1309,12 +1309,23 @@ function paymentFormIsReady() {
 }
 
 function filteredProducts() {
-  const q = window.state.query.toLowerCase();
-  return window.store.products.filter(
-    (p) =>
-      (!q || p.name.toLowerCase().includes(q)) &&
+  const q = String(window.state.query || "").toLowerCase().trim();
+  return window.store.products.filter((p) => {
+    const haystack = [
+      p.name,
+      p.description,
+      p.category,
+      ...(Array.isArray(p.tags) ? p.tags : [])
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      (!q || haystack.includes(q)) &&
       (window.state.category === "All" || p.category === window.state.category)
-  );
+    );
+  });
 }
 
 async function login() {
@@ -1560,3 +1571,14 @@ window.addEventListener("load", () => {
     });
   }, 250);
 });
+
+
+// Added by ChatGPT: search highlight helper
+window.highlightSearchText = function(text, query){
+  if (!query) return String(text ?? "");
+  const escaped = String(query).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return String(text ?? "").replace(
+    new RegExp("(" + escaped + ")", "ig"),
+    "<mark>$1</mark>"
+  );
+};
