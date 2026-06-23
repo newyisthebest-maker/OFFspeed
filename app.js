@@ -476,7 +476,7 @@ function render() {
             )}</div>`
           : ""
       }
-      ${developer ? `<button class="cloud-save-btn" type="button" data-action="cloud-save">💾 Save to Cloud</button>` : ""}
+      
     </div>
   `;
   bindEvents();
@@ -838,21 +838,7 @@ function renderAdmin() {
         <button class="primary" type="submit">Publish Listing</button>
       </form>
       <div class="dashboard-grid">
-        <section class="panel stack">
-          <h3 class="panel-title">Developer Access</h3>
-          <label class="label">Developer Gmail
-            <input class="input" data-dev-email placeholder="developer@gmail.com" />
-          </label>
-          <div class="actions">
-            <button class="ghost" type="button" data-action="add-dev-email">Add Developer</button>
-            <button class="ghost" type="button" data-action="remove-dev-email">Remove Developer</button>
-          </div>
-          ${
-            window.state.user?.email?.toLowerCase() !== OWNER_EMAIL
-              ? `<button class="ghost" type="button" data-action="exit-dev">Exit Dev Mode</button>`
-              : ``
-          }
-        </section>
+        ${renderDeveloperPanel ? renderDeveloperPanel() : ""}
         ${renderPaymentPanel()}
         ${renderTransactionsPanel()}
         ${renderDiscountCodesPanel()}
@@ -862,6 +848,23 @@ function renderAdmin() {
     </div>
   `;
 }
+
+
+function renderDeveloperPanel() {
+  const owner = window.state.user?.email?.toLowerCase() === OWNER_EMAIL;
+  return `<section class="panel stack">
+    <h3 class="panel-title">Developer Management</h3>
+    <label class="label">Developer Gmail
+      <input class="input" placeholder="name@gmail.com" data-dev-email />
+    </label>
+    <div class="row">
+      <button class="primary" type="button">Add Developer</button>
+      <button class="ghost" type="button">Remove Developer</button>
+    </div>
+    ${!owner ? '<button class="ghost" type="button" data-action="exit-dev">Exit Dev Mode</button>' : ''}
+  </section>`;
+}
+
 
 function renderPaymentPanel() {
   const settings = window.store.paymentSettings;
