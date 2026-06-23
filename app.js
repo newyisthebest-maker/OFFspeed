@@ -235,13 +235,25 @@ async function waitForFirebaseUser(timeout = 5000) {
 }
 
 
+
+function buildLocalStoreCache() {
+  return {
+    discountCodes: window.store.discountCodes || [],
+    customers: window.store.customers || [],
+    orders: window.store.orders || [],
+    paymentSettings: window.store.paymentSettings || {},
+    paymentTransactions: window.store.paymentTransactions || [],
+    developerEmails: window.store.developerEmails || []
+  };
+}
+
 async function loadProductsFromCloud() {
   const fb = window.firebaseServices;
   if (!fb?.db || !fb.getDocs) return;
   try {
     const snap = await fb.getDocs(fb.collection(fb.db, "stores", "main", "products"));
     window.store.products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    localStorage.setItem(STORE_KEY, JSON.stringify(window.store));
+    localStorage.setItem(STORE_KEY, JSON.stringify(buildLocalStoreCache()));
     render();
   } catch (e) {
     console.error("Failed loading products collection:", e);
@@ -277,7 +289,7 @@ async function save() {
     );
 
     // Always keep a local backup so refreshes don't lose data.
-    localStorage.setItem(STORE_KEY, JSON.stringify(window.store));
+    localStorage.setItem(STORE_KEY, JSON.stringify(buildLocalStoreCache()));
 
     const fb = window.firebaseServices;
 
@@ -1483,7 +1495,7 @@ async function publishListing(e) {
     images: (form.images && form.images.length ? form.images : [form.image]).filter(Boolean),
   };
   window.store.products.unshift(product);
-  localStorage.setItem(STORE_KEY, JSON.stringify(window.store));
+  localStorage.setItem(STORE_KEY, JSON.stringify(buildLocalStoreCache()));
   try {
     const fb = window.firebaseServices;
     if (fb?.db) {
