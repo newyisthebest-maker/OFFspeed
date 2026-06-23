@@ -928,3 +928,28 @@ border:1px solid #000;background:#fff;color:#000;
   pointer-events: none;
   user-select: none;
 }
+
+
+.checkout-form{
+  max-width:600px;
+  margin:24px auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.checkout-form .input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.15);
+  background:#111;
+  color:#fff;
+}
+
+.primary-btn{
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
