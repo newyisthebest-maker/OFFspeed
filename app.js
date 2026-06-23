@@ -1631,3 +1631,46 @@ document.addEventListener('input', (e) => {
     setTimeout(() => window.updateSearchSuggestions(), 0);
   }
 });
+
+
+// Added by ChatGPT: drawer menu support
+window.initDrawerMenu = function(){
+  const menu = document.querySelector('#sideMenu,.side-menu,.menu-panel,.menu');
+  const burger = document.querySelector('#hamburger,.hamburger,.menu-button,.menu-toggle');
+  if (!menu || !burger) return;
+
+  let overlay = document.getElementById('menuOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'menuOverlay';
+    overlay.className = 'menu-overlay';
+    document.body.appendChild(overlay);
+  }
+
+  function openMenu(){
+    menu.classList.add('open');
+    overlay.classList.add('open');
+    document.body.classList.add('menu-open');
+  }
+
+  function closeMenu(){
+    menu.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.classList.remove('menu-open');
+  }
+
+  burger.addEventListener('click', function(e){
+    e.preventDefault();
+    openMenu();
+  });
+
+  overlay.addEventListener('click', closeMenu);
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') closeMenu();
+  });
+};
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  setTimeout(()=>window.initDrawerMenu && window.initDrawerMenu(), 300);
+});
