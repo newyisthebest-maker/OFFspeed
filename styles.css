@@ -911,34 +911,3 @@ border:1px solid #000;background:#fff;color:#000;
 [data-upload-next]::before {
   transform: rotate(45deg);
 }
-
-
-/* Shopping detail gallery arrows */
-.shopping-gallery-arrow{
-  background: transparent;
-  border: none;
-  color:#000;
-  width:60px;
-  height:60px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  font-size:0;
-  padding:0;
-  box-shadow:none;
-}
-.shopping-gallery-arrow::before{
-  font-size:72px;
-  font-weight:900;
-  line-height:1;
-}
-.shopping-gallery-arrow-left::before{
-  content:"‹";
-}
-.shopping-gallery-arrow-right::before{
-  content:"›";
-}
-.shopping-gallery-arrow:hover{
-  opacity:.7;
-}
