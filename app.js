@@ -1209,12 +1209,10 @@ const dropzone = document.querySelector("[data-dropzone]");
   });
 
   document.querySelector("[data-upload-prev]")?.addEventListener("click", () => {
-    const slot = (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) + 4) % 5;
-    setNested("adminForm", { uploadSlot: slot });
+    if (window.prevImageSlot) window.prevImageSlot();
   });
   document.querySelector("[data-upload-next]")?.addEventListener("click", () => {
-    const slot = (((typeof window.OFFspeedImageSlot==="number"?window.OFFspeedImageSlot:window.state.adminForm.uploadSlot) || 0) + 1) % 5;
-    setNested("adminForm", { uploadSlot: slot });
+    if (window.nextImageSlot) window.nextImageSlot();
   });
 
   document
