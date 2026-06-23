@@ -2021,10 +2021,16 @@ function observeStripeContainer() {
 
     if (!cardElement) {
       container.innerHTML = '<div id="card-element"></div><div id="card-errors"></div>';
-      cardElement = stripeElements.create("card", {
-        hidePostalCode: true
-      });
-      cardElement.mount("#card-element");
+      if (!cardElement) {
+      cardElement = stripeElements.create("card", { hidePostalCode: true });
+    }
+    try {
+      if (document.getElementById("card-element")) {
+        cardElement.mount("#card-element");
+      }
+    } catch (e) {
+      // already mounted
+    }
     }
   } catch (e) {
     console.error("Stripe observer error:", e);
@@ -2033,7 +2039,6 @@ function observeStripeContainer() {
 
 new MutationObserver(() => {
   if (document.getElementById("stripe-card-container") && !document.getElementById("card-element")) {
-    cardElement = null;
     observeStripeContainer();
   }
 }).observe(document.body, {
