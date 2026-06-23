@@ -1199,7 +1199,17 @@ const dropzone = document.querySelector("[data-dropzone]");
     ?.addEventListener("input", (e) => {
       const value = e.target.value;
       const cursor = e.target.selectionStart;
-      setState({ query: value, view: "shopping" });
+
+      // Avoid a full re-render so the menu animation doesn't replay.
+      window.state.query = value;
+      window.state.view = "shopping";
+      save();
+
+      const main = document.querySelector(".main");
+      if (main) {
+        main.innerHTML = renderMain(isDeveloper());
+      }
+
       requestAnimationFrame(() => {
         const input = document.querySelector("[data-field='query']");
         if (input) {
