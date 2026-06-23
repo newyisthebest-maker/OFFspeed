@@ -46,7 +46,7 @@ async function removeDeveloperEmail(email) {
 }
 
 const OWNER_EMAIL = "newyisthebest@gmail.com";
-const TAX_RATE = 0.0825;
+const TAX_RATE = 0;
 const ADMIN_EMAIL = "treyhartle695@gmail.com";
 const CATEGORIES = ["Shirts", "Shorts", "Pants", "Hoodies"];
 
@@ -812,9 +812,6 @@ function renderSummary(details, showCheckoutButton) {
       <div class="summary-row"><span>Discount</span><strong>${money(
         details.discount
       )}</strong></div>
-      <div class="summary-row"><span>Tax</span><strong>${money(
-        details.tax
-      )}</strong></div>
       <div class="summary-row"><span>Payment</span><strong>${paymentStatusLabel()}</strong></div>
       <div class="summary-row total"><span>Total</span><span>${money(
         details.total
@@ -1335,7 +1332,7 @@ function cartDetails() {
   const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
   const discount = getDiscount(subtotal);
   const taxable = Math.max(subtotal - discount, 0);
-  const tax = taxable * TAX_RATE;
+  const tax = 0;
   return { lines, subtotal, discount, tax, total: taxable + tax };
 }
 
