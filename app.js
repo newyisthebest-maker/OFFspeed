@@ -1212,8 +1212,8 @@ function bindEvents() {
       if (!email || email === OWNER_EMAIL) return;
       const fb = window.firebaseServices;
       if (fb?.db) {
-        await fb.setDoc(fb.doc(fb.db,"developerEmails",email), { addedAt: Date.now() });
-        loadDeveloperEmails(); setState({ toast: "Developer added" });
+        await fb.setDoc(fb.doc(fb.db,"developerEmails",email), { email, addedAt: Date.now() });
+        await loadDeveloperEmails(); const inp=document.querySelector("[data-dev-email]"); if(inp) inp.value=""; setState({ toast: "Developer added" });
         clearToast();
       }
     });
@@ -1225,7 +1225,7 @@ function bindEvents() {
       const fb = window.firebaseServices;
       if (fb?.db) {
         await fb.deleteDoc(fb.doc(fb.db,"developerEmails",email));
-        loadDeveloperEmails(); setState({ toast: "Developer removed" });
+        await loadDeveloperEmails(); setState({ toast: "Developer removed" });
         clearToast();
       }
     });
