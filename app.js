@@ -249,19 +249,22 @@ function buildLocalStoreCache() {
 
 
 function safeSaveStoreCache() {
+  const cache = {
+    discountCodes: window.store?.discountCodes || [],
+    customers: window.store?.customers || [],
+    orders: window.store?.orders || [],
+    paymentSettings: window.store?.paymentSettings || {},
+    paymentTransactions: window.store?.paymentTransactions || [],
+    developerEmails: window.store?.developerEmails || []
+  };
+
   try {
-    safeSaveStoreCache();
+    localStorage.setItem(STORE_KEY, JSON.stringify(cache));
   } catch (e) {
-    if (e && (e.name === "QuotaExceededError" || String(e).includes("quota"))) {
-      try {
-        localStorage.removeItem(STORE_KEY);
-        safeSaveStoreCache();
-      } catch (_) {
-        console.warn("Could not save store cache, skipping local cache.");
-      }
-    } else {
-      throw e;
-    }
+    console.warn("Could not save store cache, skipping local cache.", e);
+    try {
+      localStorage.removeItem(STORE_KEY);
+    } catch (_) {}
   }
 }
 
