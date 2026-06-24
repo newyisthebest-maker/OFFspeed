@@ -47,6 +47,11 @@ async function removeDeveloperEmail(email) {
 
 const OWNER_EMAIL = "newyisthebest@gmail.com";
 const STRIPE_PUBLIC_KEY = "pk_test_51TlgZkL3sCBtyY1dNSNijpJ4uEPRTIQQ3CD5PfmqL67VPGKWHvwYuEPsgVYpvkCwBQ2GYz9WFQZHHMm8GUCLuc3400RDusnpB2";
+
+// Persistent Stripe card node — lives outside the render cycle so re-renders don't destroy it
+let _stripeCardNode = null;
+let _stripeInstance = null;
+let _stripeCardElement = null;
 const BACKEND_URL = "https://offspeed-server.onrender.com";
 const TAX_RATE = 0;
 const ADMIN_EMAIL = "treyhartle695@gmail.com";
@@ -381,8 +386,11 @@ function isDeveloper() {
 }
 
 function routeTo(view, extra = {}) {
-  if (view === "checkout") {
-    window._stripeCardMounted = false;
+  // When leaving checkout, tear down the persistent Stripe node so next visit remounts fresh
+  if (window.state.view === "checkout" && view !== "checkout") {
+    _stripeCardNode = null;
+    _stripeCardElement = null;
+    _stripeInstance = null;
   }
   setState({ view, selectedProductId: "", menuOpen: false, ...extra });
 }
@@ -502,7 +510,15 @@ function render() {
   bindEvents();
 
   if (window.state.view === "checkout") {
-    requestAnimationFrame(() => mountStripeCheckout());
+    requestAnimationFrame(() => {
+      // Re-inject persistent Stripe card node so re-renders don't destroy it
+      const slot = document.getElementById("stripe-card-element");
+      if (slot && _stripeCardNode) {
+        slot.replaceWith(_stripeCardNode);
+      } else {
+        mountStripeCheckout();
+      }
+    });
   }
 }
 
@@ -875,20 +891,25 @@ async function mountStripeCheckout() {
   fetch(`${BACKEND_URL}/`).catch(() => {});
   if (window.state.view !== "checkout") return;
 
-  const cardContainer = document.getElementById("stripe-card-element");
-  if (!cardContainer) return;
-  if (window._stripeCardMounted) return;
-  window._stripeCardMounted = true;
+  // If already mounted, just re-inject the persistent node (no remount needed)
+  const slot = document.getElementById("stripe-card-element");
+  if (_stripeCardNode && _stripeCardElement) {
+    if (slot) slot.replaceWith(_stripeCardNode);
+    rebindCheckoutEvents(_stripeCardElement);
+    return;
+  }
+  if (!slot) return;
 
   // If STRIPE_PUBLIC_KEY hasn't been set yet, show a message
   if (!STRIPE_PUBLIC_KEY || STRIPE_PUBLIC_KEY.includes("YOUR_PUBLISHABLE_KEY")) {
-    cardContainer.textContent = "⚠️ Stripe public key not configured.";
+    slot.textContent = "⚠️ Stripe public key not configured.";
     return;
   }
+  const cardContainer = slot;
 
-  const stripe = Stripe(STRIPE_PUBLIC_KEY);
-  const elements = stripe.elements();
-  const cardElement = elements.create("card", {
+  _stripeInstance = Stripe(STRIPE_PUBLIC_KEY);
+  const elements = _stripeInstance.elements();
+  _stripeCardElement = elements.create("card", {
     style: {
       base: {
         fontSize: "16px",
@@ -899,18 +920,23 @@ async function mountStripeCheckout() {
       invalid: { color: "#c0392b" }
     }
   });
-  cardElement.mount("#stripe-card-element");
+  // Mount into the actual container; store reference to persist across re-renders
+  _stripeCardElement.mount(cardContainer);
+  _stripeCardNode = cardContainer;
 
-  cardElement.on("change", (event) => {
+  _stripeCardElement.on("change", (event) => {
     const errorDiv = document.getElementById("stripe-errors");
     if (errorDiv) {
       errorDiv.textContent = event.error ? event.error.message : "";
     }
   });
 
+  rebindCheckoutEvents(_stripeCardElement);
+}
+
+function rebindCheckoutEvents(cardElement) {
   document.getElementById("apply-discount-btn")?.addEventListener("click", () => {
     const code = document.getElementById("discount-input")?.value?.trim() || "";
-    window._stripeCardMounted = false;
     setNested("checkout", { discountCode: code });
   });
 
