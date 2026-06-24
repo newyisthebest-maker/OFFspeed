@@ -495,6 +495,24 @@ function render() {
     </div>
   `;
   bindEvents();
+
+  // Auto-mount Stripe on checkout render
+  if (window.state && window.state.view === 'checkout') {
+    setTimeout(() => {
+      try {
+        const el = document.getElementById('card-element');
+        if (
+          el &&
+          typeof mountStripeCardField === 'function' &&
+          window.PUBLISHABLE_KEY
+        ) {
+          mountStripeCardField(window.PUBLISHABLE_KEY);
+        }
+      } catch (e) {
+        console.error('Stripe auto mount failed:', e);
+      }
+    }, 100);
+  }
 }
 
 function navButton(view, label) {
