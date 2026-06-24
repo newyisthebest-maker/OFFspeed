@@ -1749,12 +1749,6 @@ async function login() {
 
     upsertCustomer(email, name);
 
-    // Send welcome email
-    fetch(`${BACKEND_URL}/send-welcome-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, name }),
-    }).catch((e) => console.error("Welcome email failed:", e));
 
     const owner = email === OWNER_EMAIL;
     let extraDev = false;
