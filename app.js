@@ -1,5 +1,4 @@
 
-
 async function isDeveloperEmail(email) {
   email = (email || "").toLowerCase();
   if (email === OWNER_EMAIL) return true;
@@ -2040,3 +2039,16 @@ setInterval(() => {
   }
 }, 500);
 // ===== End Stripe keep alive observer =====
+
+
+window.autoMountStripeCard = function () {
+  setTimeout(() => {
+    try {
+      if (document.getElementById('card-element') && window.PUBLISHABLE_KEY) {
+        mountStripeCardField(window.PUBLISHABLE_KEY);
+      }
+    } catch (e) {
+      console.error('Stripe auto-mount failed:', e);
+    }
+  }, 100);
+};
