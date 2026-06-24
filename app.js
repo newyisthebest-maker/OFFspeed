@@ -515,6 +515,8 @@ function render() {
       const slot = document.getElementById("stripe-card-element");
       if (slot && _stripeCardNode) {
         slot.replaceWith(_stripeCardNode);
+        // Always rebind buttons — they are fresh DOM nodes after every render
+        rebindCheckoutEvents(_stripeCardElement);
       } else {
         mountStripeCheckout();
       }
@@ -935,9 +937,9 @@ async function mountStripeCheckout() {
 }
 
 function rebindCheckoutEvents(cardElement) {
+  // Buttons are fresh DOM nodes after every re-render, so always rebind them
   const applyBtn = document.getElementById("apply-discount-btn");
-  if (applyBtn && !applyBtn._bound) {
-    applyBtn._bound = true;
+  if (applyBtn) {
     applyBtn.addEventListener("click", () => {
       const code = document.getElementById("discount-input")?.value?.trim() || "";
       setNested("checkout", { discountCode: code });
@@ -945,8 +947,7 @@ function rebindCheckoutEvents(cardElement) {
   }
 
   const payBtn = document.getElementById("pay-btn");
-  if (payBtn && !payBtn._bound) {
-    payBtn._bound = true;
+  if (payBtn) {
     payBtn.addEventListener("click", async () => {
     const statusDiv = document.getElementById("payment-status");
 
@@ -1082,8 +1083,7 @@ function rebindCheckoutEvents(cardElement) {
       payBtn.disabled = false;
       payBtn.textContent = "Try Again";
     }
-    });
-  }
+  });
 }
 
 
