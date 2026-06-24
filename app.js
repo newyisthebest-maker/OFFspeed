@@ -935,14 +935,20 @@ async function mountStripeCheckout() {
 }
 
 function rebindCheckoutEvents(cardElement) {
-  document.getElementById("apply-discount-btn")?.addEventListener("click", () => {
-    const code = document.getElementById("discount-input")?.value?.trim() || "";
-    setNested("checkout", { discountCode: code });
-  });
+  const applyBtn = document.getElementById("apply-discount-btn");
+  if (applyBtn && !applyBtn._bound) {
+    applyBtn._bound = true;
+    applyBtn.addEventListener("click", () => {
+      const code = document.getElementById("discount-input")?.value?.trim() || "";
+      setNested("checkout", { discountCode: code });
+    });
+  }
 
-  document.getElementById("pay-btn")?.addEventListener("click", async () => {
+  const payBtn = document.getElementById("pay-btn");
+  if (payBtn && !payBtn._bound) {
+    payBtn._bound = true;
+    payBtn.addEventListener("click", async () => {
     const statusDiv = document.getElementById("payment-status");
-    const payBtn = document.getElementById("pay-btn");
 
     // Must be logged in
     if (!window.state.user) {
@@ -1024,7 +1030,7 @@ function rebindCheckoutEvents(cardElement) {
       }
 
       // Confirm payment with Stripe
-      const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, {
+      const { error, paymentIntent } = await _stripeInstance.confirmCardPayment(data.clientSecret, {
         payment_method: {
           card: cardElement,
           billing_details: {
@@ -1076,7 +1082,8 @@ function rebindCheckoutEvents(cardElement) {
       payBtn.disabled = false;
       payBtn.textContent = "Try Again";
     }
-  });
+    });
+  }
 }
 
 
