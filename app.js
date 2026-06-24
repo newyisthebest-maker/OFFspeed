@@ -2133,7 +2133,7 @@ document.addEventListener('click', async function(e){
       amount = Math.round(Number(window.cartTotal) * 100);
     }
 
-    const response = await fetch('/create-payment-intent', {
+    const response = await fetch('https://offspeed-stripe-server.onrender.com/create-payment-intent', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ amount })
