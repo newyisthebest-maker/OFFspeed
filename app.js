@@ -1749,7 +1749,7 @@ async function login() {
 
     upsertCustomer(email, name);
 
-    // Send welcome email on first login
+    // Send welcome email
     fetch(`${BACKEND_URL}/send-welcome-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
