@@ -928,3 +928,49 @@ border:1px solid #000;background:#fff;color:#000;
   pointer-events: none;
   user-select: none;
 }
+
+/* ── Stripe Checkout ── */
+.checkout-form-col {
+  flex: 1;
+  min-width: 280px;
+}
+
+.stripe-card-box {
+  border: 1px solid #000;
+  padding: 0.85rem;
+  background: #fff;
+  min-height: 44px;
+}
+
+.stripe-error-msg {
+  color: #c0392b;
+  font-size: 0.85rem;
+  min-height: 1.2em;
+  font-weight: 700;
+}
+
+.checkout-code-applied {
+  color: #1a7a1a;
+  font-weight: 700;
+}
+
+.payment-status-msg {
+  text-align: center;
+  font-weight: 900;
+  font-size: 1rem;
+  min-height: 1.5em;
+  text-transform: uppercase;
+  padding: 0.5rem 0;
+}
+
+.payment-status-success {
+  color: #1a7a1a;
+  border: 1px solid #1a7a1a;
+  padding: 1rem;
+}
+
+.payment-status-fail {
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  padding: 1rem;
+}
