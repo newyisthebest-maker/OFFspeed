@@ -2200,13 +2200,13 @@ document.addEventListener("click", async (e) => {
 
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && window.refreshDeveloperStatus) {
+  if (!document.hidden && window.refreshDeveloperStatus && window.state?.view !== 'checkout') {
     window.refreshDeveloperStatus();
   }
 });
 
 window.addEventListener('focus', () => {
-  if (window.refreshDeveloperStatus) {
+  if (window.refreshDeveloperStatus && window.state?.view !== 'checkout') {
     window.refreshDeveloperStatus();
   }
 });
