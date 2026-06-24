@@ -869,6 +869,8 @@ function renderCheckout() {
 
 
 async function mountStripeCheckout() {
+  // Wake up Render backend immediately
+  fetch(`${BACKEND_URL}/`).catch(() => {});
   if (window.state.view !== "checkout") return;
 
   const cardContainer = document.getElementById("stripe-card-element");
@@ -952,18 +954,48 @@ async function mountStripeCheckout() {
     try {
       const amountInCents = Math.round(details.total * 100);
 
-      const response = await fetch(`${BACKEND_URL}/create-payment-intent`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amountInCents,
-          customerEmail: window.state.user.email
-        })
-      });
+      // Fetch PaymentIntent from backend
+      let response;
+      try {
+        response = await fetch(`${BACKEND_URL}/create-payment-intent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amountInCents,
+            customerEmail: window.state.user.email
+          })
+        });
+      } catch (networkErr) {
+        console.error("Network error reaching backend:", networkErr);
+        statusDiv.textContent = "Oops sorry, payment failed. (Could not reach server — try again in a moment)";
+        statusDiv.className = "payment-status-msg payment-status-fail";
+        payBtn.disabled = false;
+        payBtn.textContent = "Try Again";
+        return;
+      }
 
-      const data = await response.json();
-      if (!response.ok || data.error) throw new Error(data.error || "Server error");
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        console.error("Bad response from backend:", parseErr);
+        statusDiv.textContent = "Oops sorry, payment failed. (Server error)";
+        statusDiv.className = "payment-status-msg payment-status-fail";
+        payBtn.disabled = false;
+        payBtn.textContent = "Try Again";
+        return;
+      }
 
+      if (!response.ok || data.error) {
+        console.error("Backend returned error:", data);
+        statusDiv.textContent = "Oops sorry, payment failed. (Server error)";
+        statusDiv.className = "payment-status-msg payment-status-fail";
+        payBtn.disabled = false;
+        payBtn.textContent = "Try Again";
+        return;
+      }
+
+      // Confirm payment with Stripe
       const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, {
         payment_method: {
           card: cardElement,
@@ -982,6 +1014,7 @@ async function mountStripeCheckout() {
       });
 
       if (error) {
+        console.error("Stripe error:", error);
         statusDiv.textContent = "Oops sorry, payment failed.";
         statusDiv.className = "payment-status-msg payment-status-fail";
         payBtn.disabled = false;
@@ -989,7 +1022,7 @@ async function mountStripeCheckout() {
         return;
       }
 
-      if (paymentIntent.status === "succeeded") {
+      if (paymentIntent && paymentIntent.status === "succeeded") {
         await saveCompletedOrder(shipping, details, paymentIntent.id);
         statusDiv.textContent = "Payment accepted";
         statusDiv.className = "payment-status-msg payment-status-success";
@@ -1000,10 +1033,16 @@ async function mountStripeCheckout() {
           setState({ cart: [], view: "shopping", toast: "Order placed!" });
           clearToast();
         }, 2500);
+      } else {
+        console.error("Unexpected paymentIntent status:", paymentIntent);
+        statusDiv.textContent = "Oops sorry, payment failed.";
+        statusDiv.className = "payment-status-msg payment-status-fail";
+        payBtn.disabled = false;
+        payBtn.textContent = "Try Again";
       }
 
     } catch (err) {
-      console.error("Payment error:", err);
+      console.error("Unexpected payment error:", err);
       statusDiv.textContent = "Oops sorry, payment failed.";
       statusDiv.className = "payment-status-msg payment-status-fail";
       payBtn.disabled = false;
