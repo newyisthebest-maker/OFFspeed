@@ -2054,33 +2054,33 @@ window.autoMountStripeCard = function () {
 };
 
 
-// ===== Stripe checkout observer auto-mount =====
-window.addEventListener('load', () => {
-  const tryMount = () => {
+// ===== OFFspeed Stripe observer auto mount =====
+window.PUBLISHABLE_KEY = window.PUBLISHABLE_KEY ||
+'pk_test_51Tkz1SJvlNvMA2aVSGBfcGrN78d8EAuU6IVSKojvDxGD3TZc9ezkFRwH8YT9GU1WDbaSj92NDGlv3X1p8wxNFIW4009Ht83PKN';
+
+(function () {
+  function tryMountStripe() {
     const el = document.getElementById('card-element');
-    if (
-      el &&
-      window.PUBLISHABLE_KEY &&
-      !document.querySelector('#card-element iframe')
-    ) {
-      try {
-        window.mountStripeCardField(window.PUBLISHABLE_KEY);
-      } catch (e) {
-        console.error('Stripe observer mount failed:', e);
+    if (!el || !window.Stripe || !window.PUBLISHABLE_KEY) return;
+
+    try {
+      if (!document.querySelector('#card-element iframe') &&
+          typeof mountStripeCardField === 'function') {
+        mountStripeCardField(window.PUBLISHABLE_KEY);
       }
+    } catch (e) {
+      console.error('Stripe observer mount failed:', e);
     }
-  };
+  }
 
-  const observer = new MutationObserver(() => {
-    tryMount();
-  });
+  window.addEventListener('load', tryMountStripe);
 
-  observer.observe(document.body, {
+  const observer = new MutationObserver(tryMountStripe);
+  observer.observe(document.documentElement, {
     childList: true,
     subtree: true
   });
 
-  setInterval(tryMount, 500);
-  setTimeout(tryMount, 100);
-});
-// ===== End Stripe checkout observer auto-mount =====
+  setInterval(tryMountStripe, 500);
+})();
+// ===== End OFFspeed Stripe observer auto mount =====
