@@ -1970,7 +1970,8 @@ function buildCloudStore() {
 
 
 
-window.mountStripeCardField = function(publishableKey){
+
+window.mountStripeCardField = function (publishableKey) {
   const container = document.getElementById('card-element');
   if (!container || !window.Stripe) return false;
 
@@ -1979,11 +1980,43 @@ window.mountStripeCardField = function(publishableKey){
     window._offspeedElements = window._offspeedStripe.elements();
   }
 
-  if (!window._offspeedCard) {
-    window._offspeedCard = window._offspeedElements.create('card', {
-      hidePostalCode: true
-    });
-    window._offspeedCard.mount('#card-element');
+  try {
+    if (!document.querySelector('#card-element iframe')) {
+      if (!window._offspeedCard) {
+        window._offspeedCard = window._offspeedElements.create('card', {
+          hidePostalCode: true
+        });
+      }
+      window._offspeedCard.mount('#card-element');
+    }
+  } catch (e) {
+    try {
+      window._offspeedCard = window._offspeedElements.create('card', {
+        hidePostalCode: true
+      });
+      window._offspeedCard.mount('#card-element');
+    } catch (err) {
+      console.error('Stripe mount failed:', err);
+      return false;
+    }
   }
   return true;
 };
+
+
+
+// Keep Stripe mounted if checkout re-renders.
+setInterval(() => {
+  const el = document.getElementById('card-element');
+  if (
+    el &&
+    window._offspeedStripe &&
+    !document.querySelector('#card-element iframe')
+  ) {
+    try {
+      mountStripeCardField(
+        'pk_test_51Tkz1SJvlNvMA2aVSGBfcGrN78d8EAuU6IVSKojvDxGD3TZc9ezkFRwH8YT9GU1WDbaSj92NDGlv3X1p8wxNFIW4009Ht83PKN'
+      );
+    } catch (e) {}
+  }
+}, 500);
