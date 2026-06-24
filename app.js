@@ -833,7 +833,7 @@ function renderCheckout() {
       <div id="card-element"></div>
       <div id="card-errors" style="color:#dc2626;margin-top:10px;"></div>
 
-      <button id="purchase-btn" class="primary-btn">
+      <button id="purchase-btn" class="primary-btn" type="button">
         Purchase
       </button>
 
@@ -2102,3 +2102,13 @@ window.PUBLISHABLE_KEY = window.PUBLISHABLE_KEY ||
   setInterval(tryMountStripe, 500);
 })();
 // ===== End OFFspeed Stripe observer auto mount =====
+
+
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('#purchase-btn');
+  if(btn){
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Purchase button clicked - page reload prevented.');
+  }
+}, true);
