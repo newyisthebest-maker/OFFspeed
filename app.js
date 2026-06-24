@@ -381,6 +381,9 @@ function isDeveloper() {
 }
 
 function routeTo(view, extra = {}) {
+  if (view === "checkout") {
+    window._stripeCardMounted = false;
+  }
   setState({ view, selectedProductId: "", menuOpen: false, ...extra });
 }
 
@@ -499,7 +502,6 @@ function render() {
   bindEvents();
 
   if (window.state.view === "checkout") {
-    window._stripeCardMounted = false;
     requestAnimationFrame(() => mountStripeCheckout());
   }
 }
