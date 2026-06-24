@@ -2112,3 +2112,60 @@ document.addEventListener('click', function(e){
     console.log('Purchase button clicked - page reload prevented.');
   }
 }, true);
+
+
+// OFFspeed Stripe payment handler
+document.addEventListener('click', async function(e){
+  const btn = e.target.closest('#purchase-btn');
+  if (!btn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  try {
+    if (!window.stripe || !window._offspeedCard) {
+      alert('Stripe has not loaded yet.');
+      return;
+    }
+
+    let amount = 100;
+    if (window.cartTotal) {
+      amount = Math.round(Number(window.cartTotal) * 100);
+    }
+
+    const response = await fetch('/create-payment-intent', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ amount })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    const result = await window.stripe.confirmCardPayment(
+      data.clientSecret,
+      {
+        payment_method: {
+          card: window._offspeedCard
+        }
+      }
+    );
+
+    if (result.error) {
+      alert(result.error.message);
+      return;
+    }
+
+    if (result.paymentIntent &&
+        result.paymentIntent.status === 'succeeded') {
+      alert('Payment successful!');
+    }
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+}, true);
