@@ -1,4 +1,5 @@
 
+
 async function isDeveloperEmail(email) {
   email = (email || "").toLowerCase();
   if (email === OWNER_EMAIL) return true;
@@ -1971,7 +1972,9 @@ function buildCloudStore() {
 
 
 
+
 window.mountStripeCardField = function (publishableKey) {
+  window.PUBLISHABLE_KEY = publishableKey;
   const container = document.getElementById('card-element');
   if (!container || !window.Stripe) return false;
 
@@ -2005,6 +2008,7 @@ window.mountStripeCardField = function (publishableKey) {
 
 
 
+
 // Keep Stripe mounted if checkout re-renders.
 setInterval(() => {
   const el = document.getElementById('card-element');
@@ -2020,3 +2024,19 @@ setInterval(() => {
     } catch (e) {}
   }
 }, 500);
+
+
+// ===== Stripe keep alive observer =====
+setInterval(() => {
+  const el = document.getElementById('card-element');
+  if (
+    el &&
+    window.PUBLISHABLE_KEY &&
+    !document.querySelector('#card-element iframe')
+  ) {
+    try {
+      window.mountStripeCardField(window.PUBLISHABLE_KEY);
+    } catch (e) {}
+  }
+}, 500);
+// ===== End Stripe keep alive observer =====
