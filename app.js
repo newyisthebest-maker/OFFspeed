@@ -1084,6 +1084,7 @@ function rebindCheckoutEvents(cardElement) {
       payBtn.textContent = "Try Again";
     }
   });
+  }
 }
 
 
