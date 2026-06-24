@@ -2052,3 +2052,35 @@ window.autoMountStripeCard = function () {
     }
   }, 100);
 };
+
+
+// ===== Stripe checkout observer auto-mount =====
+window.addEventListener('load', () => {
+  const tryMount = () => {
+    const el = document.getElementById('card-element');
+    if (
+      el &&
+      window.PUBLISHABLE_KEY &&
+      !document.querySelector('#card-element iframe')
+    ) {
+      try {
+        window.mountStripeCardField(window.PUBLISHABLE_KEY);
+      } catch (e) {
+        console.error('Stripe observer mount failed:', e);
+      }
+    }
+  };
+
+  const observer = new MutationObserver(() => {
+    tryMount();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  setInterval(tryMount, 500);
+  setTimeout(tryMount, 100);
+});
+// ===== End Stripe checkout observer auto-mount =====
