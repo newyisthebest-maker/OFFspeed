@@ -47,7 +47,8 @@ async function removeDeveloperEmail(email) {
 
 const OWNER_EMAIL = "newyisthebest@gmail.com";
 const STRIPE_PUBLIC_KEY = "pk_test_51TlgZkL3sCBtyY1dNSNijpJ4uEPRTIQQ3CD5PfmqL67VPGKWHvwYuEPsgVYpvkCwBQ2GYz9WFQZHHMm8GUCLuc3400RDusnpB2";
-const BACKEND_URL = "https://offspeed-server.onrender.com/";
+const BACKEND_URL = "https://offspeed-server.onrender.com";
+const TAX_RATE = 0;
 const ADMIN_EMAIL = "treyhartle695@gmail.com";
 const CATEGORIES = ["Shirts", "Shorts", "Pants", "Hoodies"];
 
@@ -802,20 +803,7 @@ function renderCartLine(line) {
 
 function renderCheckout() {
   const details = cartDetails();
-
-  if (!window.state.cart.length) {
-    return `
-      <section class="hero-strip"><h2>Checkout</h2></section>
-      <div class="empty">Your cart is empty</div>
-    `;
-  }
-
-  if (!window.state.user) {
-    return `
-      <section class="hero-strip"><h2>Checkout</h2></section>
-      <div class="empty">Please log in before checking out.</div>
-    `;
-  }
+  const userName = window.state.user?.name || "";
 
   return `
     <section class="hero-strip">
@@ -827,24 +815,24 @@ function renderCheckout() {
         <div class="panel stack">
           <h3 class="panel-title">Shipping Address</h3>
           <label class="label">Full Name
-            <input class="input" id="ship-name" placeholder="Jane Smith" value="${escapeAttr(window.state.user?.name || "")}" />
+            <input class="input" id="ship-name" placeholder="Jane Smith" value="${escapeAttr(userName)}" autocomplete="name" />
           </label>
           <label class="label">Street Address
-            <input class="input" id="ship-street" placeholder="123 Main St" />
+            <input class="input" id="ship-street" placeholder="123 Main St" autocomplete="street-address" />
           </label>
           <label class="label">City
-            <input class="input" id="ship-city" placeholder="Springfield" />
+            <input class="input" id="ship-city" placeholder="Springfield" autocomplete="address-level2" />
           </label>
           <div class="row">
             <label class="label" style="flex:1">State
-              <input class="input" id="ship-state" placeholder="IL" maxlength="2" />
+              <input class="input" id="ship-state" placeholder="IL" maxlength="2" autocomplete="address-level1" />
             </label>
             <label class="label" style="flex:2">ZIP Code
-              <input class="input" id="ship-zip" placeholder="62701" maxlength="10" />
+              <input class="input" id="ship-zip" placeholder="62701" maxlength="10" autocomplete="postal-code" />
             </label>
           </div>
           <label class="label">Phone (optional)
-            <input class="input" id="ship-phone" placeholder="555-555-5555" />
+            <input class="input" id="ship-phone" placeholder="555-555-5555" autocomplete="tel" />
           </label>
         </div>
 
@@ -882,13 +870,17 @@ function renderCheckout() {
 
 async function mountStripeCheckout() {
   if (window.state.view !== "checkout") return;
-  if (!window.state.cart.length) return;
-  if (!window.state.user) return;
 
   const cardContainer = document.getElementById("stripe-card-element");
   if (!cardContainer) return;
   if (window._stripeCardMounted) return;
   window._stripeCardMounted = true;
+
+  // If STRIPE_PUBLIC_KEY hasn't been set yet, show a message
+  if (!STRIPE_PUBLIC_KEY || STRIPE_PUBLIC_KEY.includes("YOUR_PUBLISHABLE_KEY")) {
+    cardContainer.textContent = "⚠️ Stripe public key not configured.";
+    return;
+  }
 
   const stripe = Stripe(STRIPE_PUBLIC_KEY);
   const elements = stripe.elements();
@@ -922,6 +914,21 @@ async function mountStripeCheckout() {
     const statusDiv = document.getElementById("payment-status");
     const payBtn = document.getElementById("pay-btn");
 
+    // Must be logged in
+    if (!window.state.user) {
+      statusDiv.textContent = "Please log in before paying.";
+      statusDiv.className = "payment-status-msg payment-status-fail";
+      return;
+    }
+
+    // Must have items in cart
+    const details = cartDetails();
+    if (!details.lines.length) {
+      statusDiv.textContent = "Your cart is empty. Add items before checking out.";
+      statusDiv.className = "payment-status-msg payment-status-fail";
+      return;
+    }
+
     const shipping = {
       name:   document.getElementById("ship-name")?.value?.trim() || "",
       street: document.getElementById("ship-street")?.value?.trim() || "",
@@ -943,7 +950,6 @@ async function mountStripeCheckout() {
     statusDiv.className = "payment-status-msg";
 
     try {
-      const details = cartDetails();
       const amountInCents = Math.round(details.total * 100);
 
       const response = await fetch(`${BACKEND_URL}/create-payment-intent`, {
@@ -995,7 +1001,6 @@ async function mountStripeCheckout() {
       console.error("Payment error:", err);
       statusDiv.textContent = "Something went wrong. Please try again.";
       statusDiv.className = "payment-status-msg payment-status-fail";
-      const details = cartDetails();
       payBtn.disabled = false;
       payBtn.textContent = `Pay ${money(details.total)}`;
     }
