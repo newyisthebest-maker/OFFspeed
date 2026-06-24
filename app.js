@@ -2093,13 +2093,13 @@ window.PUBLISHABLE_KEY = window.PUBLISHABLE_KEY ||
 
   window.addEventListener('load', tryMountStripe);
 
-  const observer = new MutationObserver(tryMountStripe);
+  const observer = new MutationObserver(() => {});
   observer.observe(document.documentElement, {
     childList: true,
     subtree: true
   });
 
-  setInterval(tryMountStripe, 500);
+  // setInterval disabled to prevent Stripe remount resets
 })();
 // ===== End OFFspeed Stripe observer auto mount =====
 
