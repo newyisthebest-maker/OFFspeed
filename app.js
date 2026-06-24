@@ -46,7 +46,8 @@ async function removeDeveloperEmail(email) {
 }
 
 const OWNER_EMAIL = "newyisthebest@gmail.com";
-const TAX_RATE = 0;
+const STRIPE_PUBLIC_KEY = "pk_test_51TlgZkL3sCBtyY1dNSNijpJ4uEPRTIQQ3CD5PfmqL67VPGKWHvwYuEPsgVYpvkCwBQ2GYz9WFQZHHMm8GUCLuc3400RDusnpB2";
+const BACKEND_URL = "https://offspeed-server.onrender.com/";
 const ADMIN_EMAIL = "treyhartle695@gmail.com";
 const CATEGORIES = ["Shirts", "Shorts", "Pants", "Hoodies"];
 
@@ -495,6 +496,11 @@ function render() {
     </div>
   `;
   bindEvents();
+
+  if (window.state.view === "checkout") {
+    window._stripeCardMounted = false;
+    requestAnimationFrame(() => mountStripeCheckout());
+  }
 }
 
 function navButton(view, label) {
@@ -795,12 +801,248 @@ function renderCartLine(line) {
 }
 
 function renderCheckout() {
+  const details = cartDetails();
+
+  if (!window.state.cart.length) {
+    return `
+      <section class="hero-strip"><h2>Checkout</h2></section>
+      <div class="empty">Your cart is empty</div>
+    `;
+  }
+
+  if (!window.state.user) {
+    return `
+      <section class="hero-strip"><h2>Checkout</h2></section>
+      <div class="empty">Please log in before checking out.</div>
+    `;
+  }
+
   return `
     <section class="hero-strip">
       <h2>Checkout</h2>
     </section>
-    <div class="empty">Set up stripe</div>
+    <div class="checkout-layout">
+      <div class="stack checkout-form-col">
+
+        <div class="panel stack">
+          <h3 class="panel-title">Shipping Address</h3>
+          <label class="label">Full Name
+            <input class="input" id="ship-name" placeholder="Jane Smith" value="${escapeAttr(window.state.user?.name || "")}" />
+          </label>
+          <label class="label">Street Address
+            <input class="input" id="ship-street" placeholder="123 Main St" />
+          </label>
+          <label class="label">City
+            <input class="input" id="ship-city" placeholder="Springfield" />
+          </label>
+          <div class="row">
+            <label class="label" style="flex:1">State
+              <input class="input" id="ship-state" placeholder="IL" maxlength="2" />
+            </label>
+            <label class="label" style="flex:2">ZIP Code
+              <input class="input" id="ship-zip" placeholder="62701" maxlength="10" />
+            </label>
+          </div>
+          <label class="label">Phone (optional)
+            <input class="input" id="ship-phone" placeholder="555-555-5555" />
+          </label>
+        </div>
+
+        <div class="panel stack">
+          <h3 class="panel-title">Discount Code</h3>
+          <div class="row">
+            <input class="input" id="discount-input"
+              placeholder="Enter code"
+              value="${escapeAttr(window.state.checkout.discountCode || "")}"
+              style="flex:1" />
+            <button class="ghost" type="button" id="apply-discount-btn">Apply</button>
+          </div>
+          ${window.state.checkout.discountCode
+            ? `<div class="small checkout-code-applied">✓ Code applied: ${escapeHtml(window.state.checkout.discountCode)}</div>`
+            : ""}
+        </div>
+
+        <div class="panel stack">
+          <h3 class="panel-title">Card Details</h3>
+          <div id="stripe-card-element" class="stripe-card-box"></div>
+          <div id="stripe-errors" class="stripe-error-msg"></div>
+        </div>
+
+        <button class="primary" type="button" id="pay-btn" style="font-size:1.1rem; min-height:3.4rem;">
+          Pay ${money(details.total)}
+        </button>
+        <div id="payment-status" class="payment-status-msg"></div>
+
+      </div>
+      ${renderSummary(details, false)}
+    </div>
   `;
+}
+
+
+async function mountStripeCheckout() {
+  if (window.state.view !== "checkout") return;
+  if (!window.state.cart.length) return;
+  if (!window.state.user) return;
+
+  const cardContainer = document.getElementById("stripe-card-element");
+  if (!cardContainer) return;
+  if (window._stripeCardMounted) return;
+  window._stripeCardMounted = true;
+
+  const stripe = Stripe(STRIPE_PUBLIC_KEY);
+  const elements = stripe.elements();
+  const cardElement = elements.create("card", {
+    style: {
+      base: {
+        fontSize: "16px",
+        color: "#000",
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        "::placeholder": { color: "#999" }
+      },
+      invalid: { color: "#c0392b" }
+    }
+  });
+  cardElement.mount("#stripe-card-element");
+
+  cardElement.on("change", (event) => {
+    const errorDiv = document.getElementById("stripe-errors");
+    if (errorDiv) {
+      errorDiv.textContent = event.error ? event.error.message : "";
+    }
+  });
+
+  document.getElementById("apply-discount-btn")?.addEventListener("click", () => {
+    const code = document.getElementById("discount-input")?.value?.trim() || "";
+    window._stripeCardMounted = false;
+    setNested("checkout", { discountCode: code });
+  });
+
+  document.getElementById("pay-btn")?.addEventListener("click", async () => {
+    const statusDiv = document.getElementById("payment-status");
+    const payBtn = document.getElementById("pay-btn");
+
+    const shipping = {
+      name:   document.getElementById("ship-name")?.value?.trim() || "",
+      street: document.getElementById("ship-street")?.value?.trim() || "",
+      city:   document.getElementById("ship-city")?.value?.trim() || "",
+      state:  document.getElementById("ship-state")?.value?.trim() || "",
+      zip:    document.getElementById("ship-zip")?.value?.trim() || "",
+      phone:  document.getElementById("ship-phone")?.value?.trim() || "",
+    };
+
+    if (!shipping.name || !shipping.street || !shipping.city || !shipping.state || !shipping.zip) {
+      statusDiv.textContent = "Please fill in all shipping fields.";
+      statusDiv.className = "payment-status-msg payment-status-fail";
+      return;
+    }
+
+    payBtn.disabled = true;
+    payBtn.textContent = "Processing…";
+    statusDiv.textContent = "";
+    statusDiv.className = "payment-status-msg";
+
+    try {
+      const details = cartDetails();
+      const amountInCents = Math.round(details.total * 100);
+
+      const response = await fetch(`${BACKEND_URL}/create-payment-intent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amountInCents,
+          customerEmail: window.state.user.email
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || data.error) throw new Error(data.error || "Server error");
+
+      const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: shipping.name,
+            email: window.state.user.email,
+            address: {
+              line1: shipping.street,
+              city: shipping.city,
+              state: shipping.state,
+              postal_code: shipping.zip,
+              country: "US"
+            }
+          }
+        }
+      });
+
+      if (error) {
+        statusDiv.textContent = "Payment declined — " + error.message + ". Please try again.";
+        statusDiv.className = "payment-status-msg payment-status-fail";
+        payBtn.disabled = false;
+        payBtn.textContent = `Pay ${money(details.total)}`;
+        return;
+      }
+
+      if (paymentIntent.status === "succeeded") {
+        await saveCompletedOrder(shipping, details, paymentIntent.id);
+        statusDiv.textContent = "✅ Purchase accepted! Your order has been placed.";
+        statusDiv.className = "payment-status-msg payment-status-success";
+        setState({ cart: [], view: "shopping", toast: "Order placed!" });
+        clearToast();
+      }
+
+    } catch (err) {
+      console.error("Payment error:", err);
+      statusDiv.textContent = "Something went wrong. Please try again.";
+      statusDiv.className = "payment-status-msg payment-status-fail";
+      const details = cartDetails();
+      payBtn.disabled = false;
+      payBtn.textContent = `Pay ${money(details.total)}`;
+    }
+  });
+}
+
+
+async function saveCompletedOrder(shipping, details, stripePaymentId) {
+  const orderId = generateId();
+  const now = Date.now();
+
+  const order = {
+    id: orderId,
+    customerName: window.state.user.name,
+    customerEmail: window.state.user.email,
+    items: details.lines.map(l => ({
+      productId: l.productId,
+      name: l.product.name,
+      qty: l.qty,
+      price: l.product.salePrice || l.product.price
+    })),
+    subtotal: details.subtotal,
+    discount: details.discount,
+    tax: details.tax,
+    total: details.total,
+    delivery: shipping,
+    billing: shipping,
+    createdAt: now,
+    paymentProvider: "stripe",
+    paymentStatus: "paid",
+    paymentReference: stripePaymentId,
+    discountCode: window.state.checkout.discountCode || ""
+  };
+
+  try {
+    const fb = window.firebaseServices;
+    if (fb?.db && fb?.addDoc && fb?.collection) {
+      await fb.addDoc(fb.collection(fb.db, "stores", "main", "orders"), order);
+    }
+  } catch (e) {
+    console.error("Failed to save order to Firebase:", e);
+  }
+
+  window.store.orders = [...(window.store.orders || []), order];
+  upsertCustomer(window.state.user.email, window.state.user.name);
+  setNested("checkout", { discountCode: "" });
+  await save();
 }
 
 function renderSummary(details, showCheckoutButton) {
